@@ -54,8 +54,8 @@ func InitGlobalVar() error {
 	SvcPortInterval = viper.GetInt(KeySvcPortInterval)
 	SvcErrcodeInterval = viper.GetInt(KeySvcErrcodeInterval)
 
-	DefaultSvcGroup = viper.GetString(defaultServiceGroup)
-	TmplRootDir = viper.GetString(templateRootDir)
+	DefaultSvcGroup = viper.GetString(KeyDefaultServiceGroup)
+	TmplRootDir = viper.GetString(KeyTemplateRootDir)
 	TmplConfigFile = new(TemplateConfigFile)
 	tmplConfPath := filepath.Join(TmplRootDir, "config.yaml")
 	err = ReadYaml(tmplConfPath, TmplConfigFile)
@@ -66,22 +66,22 @@ func InitGlobalVar() error {
 	if TmplConfigFile == nil {
 		return errors.New("this template repository is missing a configuration file")
 	}
-	GoModulePrefix = viper.GetString(modulePrefix)
-	TargetRootPath = viper.GetString(targetRootPath)
-	OnceFiles = viper.GetStringSlice(onceFiles)
-	ThirdPartyProtoPath = viper.GetStringSlice(thirdPartyProtoPath)
-	ProtoCentralRepoPath = viper.GetString(protoCentralRepoPath)
+	GoModulePrefix = viper.GetString(KeyModulePrefix)
+	TargetRootPath = viper.GetString(KeyTargetRootPath)
+	OnceFiles = viper.GetStringSlice(KeyOnceFiles)
+	ThirdPartyProtoPath = viper.GetStringSlice(KeyThirdPartyProtoPath)
+	ProtoCentralRepoPath = viper.GetString(KeyProtoCentralRepoPath)
 	return nil
 }
 
 func Validate() error {
 	if TmplRootDir == "" {
-		fmt.Println(fmt.Sprintf("err: must be set: 'export GCTL_%s=/your/path'", templateRootDir))
-		return errors.New(fmt.Sprintf("missing environment variable: GCTL_%s", templateRootDir))
+		fmt.Println(fmt.Sprintf("err: must be set: 'export GCTL_%s=/your/path'", KeyTemplateRootDir))
+		return errors.New(fmt.Sprintf("missing environment variable: GCTL_%s", KeyTemplateRootDir))
 	}
-	if viper.GetString(modulePrefix) == "" {
-		fmt.Println(fmt.Sprintf("err: must be set: 'export GCTL_%s=your_repository_host'", modulePrefix))
-		return errors.New(fmt.Sprintf("missing environment variable: GCTL_%s", modulePrefix))
+	if viper.GetString(KeyModulePrefix) == "" {
+		fmt.Println(fmt.Sprintf("err: must be set: 'export GCTL_%s=your_repository_host'", KeyModulePrefix))
+		return errors.New(fmt.Sprintf("missing environment variable: GCTL_%s", KeyModulePrefix))
 	}
 
 	if TmplConfigFile == nil {
