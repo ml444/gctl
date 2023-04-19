@@ -91,8 +91,21 @@ func Validate() error {
 }
 
 func PrintImportantVars() {
-	fmt.Printf("===> GCTL_%s=%s\n", templateRootDir, TmplRootDir)
-	fmt.Printf("===> GCTL_%s=%s\n", modulePrefix, viper.GetString(modulePrefix))
+	fmt.Printf("===> GCTL_%s=%s\n", KeyTemplateRootDir, TmplRootDir)
+	fmt.Printf("===> GCTL_%s=%s\n", KeyTargetRootPath, TargetRootPath)
+	fmt.Printf("===> GCTL_%s=%s\n", KeyModulePrefix, GoModulePrefix)
+	fmt.Printf("===> GCTL_%s=%#v\n", KeyOnceFiles, OnceFiles)
+	fmt.Printf("===> GCTL_%s=%s\n", KeyProtoCentralRepoPath, ProtoCentralRepoPath)
+	fmt.Printf("===> GCTL_%s=%s\n", KeyThirdPartyProtoPath, ThirdPartyProtoPath)
+	fmt.Printf("===> GCTL_%s=%s\n", KeyDefaultServiceGroup, DefaultSvcGroup)
+	fmt.Printf("===> GCTL_%s=%s\n", KeyDbDSN, DbDSN)
+	fmt.Printf("===> GCTL_%s=%t\n", KeyEnableAssignPort, EnableAssignPort)
+	fmt.Printf("===> GCTL_%s=%t\n", KeyEnableAssignErrcode, EnableAssignErrcode)
+	fmt.Printf("===> GCTL_%s=%d\n", KeySvcPortInterval, SvcPortInterval)
+	fmt.Printf("===> GCTL_%s=%d\n", KeySvcErrcodeInterval, SvcErrcodeInterval)
+	fmt.Printf("===> GCTL_%s=%#v\n", KeySvcGroupInitPortMap, SvcGroupInitPortMap)
+	fmt.Printf("===> GCTL_%s=%#v\n", KeySvcGroupInitErrcodeMap, SvcGroupInitErrcodeMap)
+
 }
 
 func ReadYaml(fp string, conf interface{}) error {
