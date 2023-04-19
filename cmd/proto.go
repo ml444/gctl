@@ -38,7 +38,8 @@ var protoCmd = &cobra.Command{
 			"ServiceName":     protoName,
 			"CaseServiceName": fmt.Sprintf("%s%s", strings.ToTitle(protoName[:1]), protoName[1:]),
 		}
-		var firstErrcode int = 1
+		var firstErrcode = 1
+		var endErrCode = 1
 		if config.EnableAssignErrcode {
 			var err error
 			var errCode int
@@ -53,10 +54,12 @@ var protoCmd = &cobra.Command{
 				return
 			}
 			if errCode != 0 {
-				firstErrcode = errCode + 1
+				firstErrcode = errCode
+				endErrCode = errCode + config.SvcErrcodeInterval - 1
 			}
 		}
 		data["StartErrCode"] = firstErrcode
+		data["EndErrCode"] = endErrCode
 
 		err := parser.GenerateTemplate(
 			targetFilepath,
