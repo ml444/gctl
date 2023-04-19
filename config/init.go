@@ -79,7 +79,7 @@ func Validate() error {
 		fmt.Println(fmt.Sprintf("err: must be set: 'export GCTL_%s=/your/path'", KeyTemplateRootDir))
 		return errors.New(fmt.Sprintf("missing environment variable: GCTL_%s", KeyTemplateRootDir))
 	}
-	if viper.GetString(KeyModulePrefix) == "" {
+	if GoModulePrefix == "" {
 		fmt.Println(fmt.Sprintf("err: must be set: 'export GCTL_%s=your_repository_host'", KeyModulePrefix))
 		return errors.New(fmt.Sprintf("missing environment variable: GCTL_%s", KeyModulePrefix))
 	}
