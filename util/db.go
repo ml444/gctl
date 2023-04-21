@@ -91,7 +91,6 @@ func (a *SvcAssign) getDb() error {
 	if len(sList) != 2 {
 		return errors.New(fmt.Sprintf("database DSN format is error: %s", a.DbDSN))
 	}
-	log.Info(sList[0], sList[1])
 	driverName := sList[0]
 	if !(driverName == "mysql" || driverName == "postgres") {
 		return errors.New("you must use one of the following driver names: mysql or postgresql")

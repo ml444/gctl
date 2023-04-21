@@ -33,7 +33,7 @@ var protoCmd = &cobra.Command{
 			return
 		}
 		data := map[string]interface{}{
-			"modulePrefix":    modulePrefix,
+			"ModulePrefix":    modulePrefix,
 			"PackageName":     protoName,
 			"ServiceName":     protoName,
 			"CaseServiceName": fmt.Sprintf("%s%s", strings.ToTitle(protoName[:1]), protoName[1:]),
@@ -100,9 +100,12 @@ func GetProtoAbsPath(protoName string) string {
 	} else {
 		protoName = fmt.Sprintf("%s.proto", protoName)
 	}
-	for _, el := range config.TmplConfigFile.Target.RelativeDir.Proto {
-		elems = append(elems, strings.ReplaceAll(el, ServiceNameVar, serviceName))
+	if repoPath == "" {
+		for _, el := range config.TmplConfigFile.Target.RelativeDir.Proto {
+			elems = append(elems, strings.ReplaceAll(el, ServiceNameVar, serviceName))
+		}
 	}
+
 	elems = append(elems, protoName)
 	return filepath.Join(elems...)
 }

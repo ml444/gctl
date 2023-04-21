@@ -34,9 +34,10 @@ var clientCmd = &cobra.Command{
 		}
 		baseDir := config.TargetRootPath
 		if protoPath == "" {
-			arg := args[0]
-			protoPath = filepath.Join(baseDir, config.GoModulePrefix, fmt.Sprintf("%s.proto", arg))
+			protoPath = args[0]
+			//protoPath = filepath.Join(baseDir, config.GoModulePrefix, fmt.Sprintf("%s.proto", arg))
 		}
+		protoPath = GetProtoAbsPath(protoPath)
 		tmpDir := GetTemplateClientDir()
 		onceFiles := config.OnceFiles
 		log.Info("root location of code generation:", baseDir)

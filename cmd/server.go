@@ -32,7 +32,7 @@ var serverCmd = &cobra.Command{
 			serviceGroup = config.DefaultSvcGroup
 		}
 		protoPath = GetProtoAbsPath(protoPath)
-		baseDir := filepath.Join(config.TargetRootPath, config.GoModulePrefix)
+		baseDir := config.TargetRootPath
 		tmpDir := GetTemplateServerDir()
 		onceFiles := config.OnceFiles
 		log.Info("root location of code generation:", baseDir)

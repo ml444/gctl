@@ -13,7 +13,11 @@ import (
 )
 
 func ParseProto(protoFp string) (*ProtoData, error) {
-	reader, _ := os.Open(protoFp)
+	reader, err := os.Open(protoFp)
+	if err != nil {
+		log.Errorf("err: %v", err)
+		return nil, err
+	}
 	defer func() {
 		err := reader.Close()
 		if err != nil {
