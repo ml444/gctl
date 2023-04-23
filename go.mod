@@ -6,7 +6,7 @@ require (
 	github.com/emicklei/proto v1.11.1
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/lib/pq v1.10.7
-	github.com/ml444/glog v0.2.6
+	github.com/ml444/glog v0.2.7
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.15.0
 	gopkg.in/yaml.v3 v3.0.1
