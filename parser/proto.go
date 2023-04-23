@@ -12,8 +12,8 @@ import (
 	log "github.com/ml444/glog"
 )
 
-func ParseProto(protoFp string) (*ProtoData, error) {
-	reader, err := os.Open(protoFp)
+func ParseProto(protoFilepath string) (*ProtoData, error) {
+	reader, err := os.Open(protoFilepath)
 	if err != nil {
 		log.Errorf("err: %v", err)
 		return nil, err
@@ -32,7 +32,7 @@ func ParseProto(protoFp string) (*ProtoData, error) {
 		return nil, err
 	}
 	protoData := NewProtoData()
-	protoData.FilePath = protoFp
+	protoData.FilePath = protoFilepath
 	handlePackage := func(p *proto.Package) {
 		protoData.PackageName = p.Name
 	}

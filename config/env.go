@@ -38,5 +38,5 @@ func SetDefaults() {
 	viper.SetDefault(KeySvcPortInterval, 5)
 	viper.SetDefault(KeyEnableAssignPort, false)
 	viper.SetDefault(KeySvcErrcodeInterval, 1000)
-	viper.SetDefault(KeyEnableAssignErrcode, true)
+	viper.SetDefault(KeyEnableAssignErrcode, false)
 }

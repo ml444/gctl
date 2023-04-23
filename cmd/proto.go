@@ -39,7 +39,7 @@ var protoCmd = &cobra.Command{
 			"CaseServiceName": fmt.Sprintf("%s%s", strings.ToTitle(protoName[:1]), protoName[1:]),
 		}
 		var firstErrcode = 1
-		var endErrCode = 1
+		var endErrCode = 1 << 31
 		if config.EnableAssignErrcode {
 			var err error
 			var errCode int
