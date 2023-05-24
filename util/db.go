@@ -150,6 +150,33 @@ func (a *SvcAssign) getMaxErrcode() (int, error) {
 	}
 	return maxErrcode, nil
 }
+
+func (a *SvcAssign) GetModuleId() (int, error) {
+	var err error
+	if a.db == nil {
+		err = a.getDb()
+		if err != nil {
+			return 0, err
+		}
+		defer a.db.Close()
+	}
+
+	row := a.db.QueryRow(`SELECT id FROM service_init_config WHERE service_name=? AND service_group=?`, a.SvcName, a.SvcGroup)
+	if err := row.Err(); err != nil {
+		log.Error(a.SvcGroup, a.SvcName)
+		log.Error(err.Error())
+		return 0, err
+	}
+	var moduleId int
+	err = row.Scan(&moduleId)
+	if err != nil {
+		log.Error(a.SvcGroup, a.SvcName)
+		log.Error(err)
+		return 0, err
+	}
+	return moduleId, nil
+}
+
 func (a *SvcAssign) getErrCode() (int, error) {
 	insertNewErrcode := func(maxErrcode int) (int, error) {
 		newErrcode := maxErrcode + a.ErrcodeInterval

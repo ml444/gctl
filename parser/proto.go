@@ -296,6 +296,7 @@ type ProtoData struct {
 	GoVersion    string
 	Ports        []int
 	StartErrCode int
+	ModuleId     int
 
 	FilePath         string
 	PackageName      string

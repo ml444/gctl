@@ -55,6 +55,21 @@ var clientCmd = &cobra.Command{
 		}
 		//dataMap["GoVersion"] = strings.TrimPrefix(runtime.Version(), "go")
 
+		if config.EnableAssignErrcode {
+			var moduleId int
+			svcAssign := util.NewSvcAssign(
+				config.DbDSN, getProtoName(protoPath), serviceGroup,
+				config.SvcPortInterval, config.SvcErrcodeInterval,
+				config.SvcGroupInitPortMap, config.SvcGroupInitErrcodeMap,
+			)
+			moduleId, err = svcAssign.GetModuleId()
+			if err != nil {
+				log.Error(err)
+				return
+			}
+			pd.ModuleId = moduleId
+		}
+
 		clientRootDir := filepath.Join(baseDir, strings.Split(pd.Options["go_package"], ";")[0])
 		err = filepath.Walk(tmpDir, func(path string, info fs.FileInfo, err error) error {
 			if err != nil {
@@ -133,6 +148,11 @@ var clientCmd = &cobra.Command{
 
 		time.Sleep(time.Millisecond * 100)
 	},
+}
+
+func getProtoName(protoPath string) string {
+	_, fname := filepath.Split(protoPath)
+	return strings.TrimRight(fname, ".proto")
 }
 
 func checkProtoc() bool {

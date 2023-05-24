@@ -76,6 +76,7 @@ var funcMap = template.FuncMap{
 	"HasPrefix":                strings.HasPrefix,
 	"Contains":                 strings.Contains,
 	"GetStatusCodeFromComment": util.GetStatusCodeFromComment,
+	"ToUpper":                  strings.ToUpper,
 	"ToUpperFirst":             util.ToUpperFirst,
 	"ToLowerFirst":             util.ToLowerFirst,
 	"CamelToSnake":             util.CamelToSnake,
