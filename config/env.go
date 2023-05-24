@@ -1,10 +1,8 @@
 package config
 
 import (
-	"os"
-	"path/filepath"
-
 	"github.com/spf13/viper"
+	"os"
 )
 
 const (
@@ -34,7 +32,6 @@ func init() {
 func SetDefaults() {
 	viper.SetDefault(KeyTargetRootPath, os.Getenv("HOME"))
 	viper.SetDefault(KeyOnceFiles, ".gitignore go.mod .editorconfig README.md Dockerfile Makefile")
-	viper.SetDefault(KeyThirdPartyProtoPath, filepath.Join(TmplRootDir, "protofiles")) // TODO: protoFile
 	viper.SetDefault(KeySvcPortInterval, 5)
 	viper.SetDefault(KeyEnableAssignPort, false)
 	viper.SetDefault(KeySvcErrcodeInterval, 1000)

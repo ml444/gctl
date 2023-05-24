@@ -1,17 +1,22 @@
 package config
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/ml444/gctl/util"
 	"gopkg.in/yaml.v3"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	log "github.com/ml444/glog"
 	"github.com/spf13/viper"
 )
+
+const defaultTemplatesName = "gctl-templates"
 
 var (
 	DbDSN                  string
@@ -53,9 +58,35 @@ func InitGlobalVar() error {
 	SvcGroupInitErrcodeMap = viper.GetStringMap(KeySvcGroupInitErrcodeMap)
 	SvcPortInterval = viper.GetInt(KeySvcPortInterval)
 	SvcErrcodeInterval = viper.GetInt(KeySvcErrcodeInterval)
-
 	DefaultSvcGroup = viper.GetString(KeyDefaultServiceGroup)
+
+	ThirdPartyProtoPath = viper.GetStringSlice(KeyThirdPartyProtoPath)
+	TargetRootPath = viper.GetString(KeyTargetRootPath)
 	TmplRootDir = viper.GetString(KeyTemplateRootDir)
+	if TmplRootDir == "" {
+		cmd := exec.Command("bash", "-c", fmt.Sprintf("cd %s && git clone https://github.com/ml444/gctl-templates.git", TargetRootPath))
+		log.Infof("exec: %s", cmd.String())
+		var outBuf, errBuf bytes.Buffer
+		cmd.Stdout = &outBuf
+		cmd.Stderr = &errBuf
+		err = cmd.Run()
+		if err != nil {
+			log.Infof("Err: %s \nStdout: %s \n Stderr: %s", err, outBuf.String(), errBuf.String())
+			return err
+		}
+		log.Infof(" %s", errBuf.String())
+		TmplRootDir = filepath.Join(TargetRootPath, defaultTemplatesName, "separation_templates")
+		ThirdPartyProtoPath = append(ThirdPartyProtoPath, filepath.Join(TargetRootPath, defaultTemplatesName, "protofiles"))
+		//fmt.Println(fmt.Sprintf("err: must be set: 'export GCTL_%s=/your/path'", KeyTemplateRootDir))
+		//return errors.New(fmt.Sprintf("missing environment variable: GCTL_%s", KeyTemplateRootDir))
+	} else {
+		if strings.Contains(TmplRootDir, defaultTemplatesName) {
+			sList := strings.Split(TmplRootDir, defaultTemplatesName)
+			baseDir := strings.TrimSuffix(sList[0], string(os.PathSeparator))
+			ThirdPartyProtoPath = append(ThirdPartyProtoPath, filepath.Join(baseDir, defaultTemplatesName, "protofiles"))
+		}
+	}
+
 	TmplConfigFile = new(TemplateConfigFile)
 	tmplConfPath := filepath.Join(TmplRootDir, "config.yaml")
 	err = ReadYaml(tmplConfPath, TmplConfigFile)
@@ -67,26 +98,12 @@ func InitGlobalVar() error {
 		return errors.New("this template repository is missing a configuration file")
 	}
 	GoModulePrefix = viper.GetString(KeyModulePrefix)
-	TargetRootPath = viper.GetString(KeyTargetRootPath)
-	OnceFiles = viper.GetStringSlice(KeyOnceFiles)
-	ThirdPartyProtoPath = viper.GetStringSlice(KeyThirdPartyProtoPath)
-	ProtoCentralRepoPath = viper.GetString(KeyProtoCentralRepoPath)
-	return nil
-}
-
-func Validate() error {
-	if TmplRootDir == "" {
-		fmt.Println(fmt.Sprintf("err: must be set: 'export GCTL_%s=/your/path'", KeyTemplateRootDir))
-		return errors.New(fmt.Sprintf("missing environment variable: GCTL_%s", KeyTemplateRootDir))
-	}
 	if GoModulePrefix == "" {
 		fmt.Println(fmt.Sprintf("err: must be set: 'export GCTL_%s=your_repository_host'", KeyModulePrefix))
 		return errors.New(fmt.Sprintf("missing environment variable: GCTL_%s", KeyModulePrefix))
 	}
-
-	if TmplConfigFile == nil {
-		return errors.New("template repository configuration file not found")
-	}
+	OnceFiles = viper.GetStringSlice(KeyOnceFiles)
+	ProtoCentralRepoPath = viper.GetString(KeyProtoCentralRepoPath)
 	return nil
 }
 

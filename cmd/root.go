@@ -1,12 +1,13 @@
 package cmd
 
 import (
-	"github.com/ml444/gctl/config"
-	"github.com/ml444/gctl/util"
 	"os"
 	"strings"
 	"text/template"
 	"time"
+
+	"github.com/ml444/gctl/config"
+	"github.com/ml444/gctl/util"
 
 	log "github.com/ml444/glog"
 	"github.com/spf13/cobra"
@@ -35,8 +36,9 @@ func init() {
 }
 
 var rootCmd = &cobra.Command{
-	Use:   "gctl",
-	Short: "A code generation and checking tool for Go microservices",
+	Use:     "gctl",
+	Example: "gctl <command> [command options]",
+	Short:   "A code generation and checking tool for Go microservices",
 	Run: func(cmd *cobra.Command, args []string) {
 		err := cmd.Help()
 		if err != nil {
@@ -54,12 +56,6 @@ func Execute() {
 
 	config.SetDefaults()
 	err = config.InitGlobalVar()
-	if err != nil {
-		println(err.Error())
-		return
-	}
-
-	err = config.Validate()
 	if err != nil {
 		println(err.Error())
 		return
