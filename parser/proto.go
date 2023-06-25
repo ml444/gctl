@@ -356,8 +356,13 @@ type ListReqOption struct {
 }
 
 func NewProtoData() *ProtoData {
+	version := strings.TrimPrefix(runtime.Version(), "go")
+	vList := strings.Split(version, ".")
+	if len(vList) >= 3 {
+		version = strings.Join(vList[:2], ".")
+	}
 	return &ProtoData{
-		GoVersion: strings.TrimPrefix(runtime.Version(), "go"),
+		GoVersion: version,
 	}
 }
 
