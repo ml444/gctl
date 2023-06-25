@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-var regStatusCode = regexp.MustCompile(`^.*?@status_code:\s*(\d+)$`)
+var regStatusCode = regexp.MustCompile(`^.*?@status_code:\s*(\d+)\s*$`)
 
 func Concat(args ...string) string {
 	var strBuilder = &strings.Builder{}
