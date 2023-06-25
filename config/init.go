@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/ml444/gctl/util"
-	"gopkg.in/yaml.v3"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/ml444/gctl/util"
+	"gopkg.in/yaml.v3"
 
 	log "github.com/ml444/glog"
 	"github.com/spf13/viper"
@@ -60,11 +61,15 @@ func InitGlobalVar() error {
 	SvcErrcodeInterval = viper.GetInt(KeySvcErrcodeInterval)
 	DefaultSvcGroup = viper.GetString(KeyDefaultServiceGroup)
 
+	ProtoCentralRepoPath = viper.GetString(KeyProtoCentralRepoPath)
 	ThirdPartyProtoPath = viper.GetStringSlice(KeyThirdPartyProtoPath)
+	if ProtoCentralRepoPath != "" {
+		ThirdPartyProtoPath = append(ThirdPartyProtoPath, ProtoCentralRepoPath)
+	}
 	TargetRootPath = viper.GetString(KeyTargetRootPath)
 	TmplRootDir = viper.GetString(KeyTemplateRootDir)
 	if TmplRootDir == "" {
-		cmd := exec.Command("bash", "-c", fmt.Sprintf("cd %s && git clone https://github.com/ml444/gctl-templates.git", TargetRootPath))
+		cmd := exec.Command("bash", "-c", "cd "+TargetRootPath+" && git clone https://github.com/ml444/gctl-templates.git")
 		log.Infof("exec: %s", cmd.String())
 		var outBuf, errBuf bytes.Buffer
 		cmd.Stdout = &outBuf
@@ -103,7 +108,6 @@ func InitGlobalVar() error {
 		return errors.New(fmt.Sprintf("missing environment variable: GCTL_%s", KeyModulePrefix))
 	}
 	OnceFiles = viper.GetStringSlice(KeyOnceFiles)
-	ProtoCentralRepoPath = viper.GetString(KeyProtoCentralRepoPath)
 	return nil
 }
 

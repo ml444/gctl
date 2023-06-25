@@ -3,12 +3,13 @@ package cmd
 import (
 	"bytes"
 	"fmt"
-	"github.com/ml444/gctl/config"
-	"github.com/ml444/gctl/util"
 	"io/fs"
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/ml444/gctl/config"
+	"github.com/ml444/gctl/util"
 
 	"github.com/ml444/gctl/parser"
 	log "github.com/ml444/glog"
@@ -97,19 +98,21 @@ var serverCmd = &cobra.Command{
 			return
 		}
 
-		// go mod tidy
+		// go mod tidy && go fmt
 		{
-			cmd := exec.Command("bash", "-c", fmt.Sprintf("cd %s && go mod tidy && go fmt ./...", serverRootDir))
+			cmd := exec.Command("bash", "-c", "cd "+serverRootDir+" && go mod tidy && go fmt ./...")
 			log.Infof("exec: %s", cmd.String())
 			var outBuf, errBuf bytes.Buffer
 			cmd.Stdout = &outBuf
 			cmd.Stderr = &errBuf
 			err = cmd.Run()
 			if err != nil {
-				log.Infof("Err: %s \nStdout: %s \n Stderr: %s", err, outBuf.String(), errBuf.String())
+				log.Infof("Err: %s ", err.Error())
+				log.Info("Stdout: ", outBuf.String())
+				log.Info("Stderr: ", errBuf.String())
 				return
 			}
-			log.Infof(" %s \n fmt files: %s", errBuf.String(), outBuf.String())
+			log.Infof(" fmt files: %s", outBuf.String())
 		}
 	},
 }

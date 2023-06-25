@@ -3,8 +3,6 @@ package cmd
 import (
 	"bytes"
 	"fmt"
-	"github.com/ml444/gctl/config"
-	"github.com/ml444/gctl/util"
 	"go/build"
 	"io/fs"
 	"os"
@@ -13,6 +11,9 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/ml444/gctl/config"
+	"github.com/ml444/gctl/util"
 
 	"github.com/ml444/gctl/parser"
 	log "github.com/ml444/glog"
@@ -131,19 +132,21 @@ var clientCmd = &cobra.Command{
 			}
 		}
 
-		// go mod tidy
+		// go mod tidy && go fmt
 		{
-			cmd := exec.Command("bash", "-c", fmt.Sprintf("cd %s && go mod tidy && go fmt ./...", absPath))
+			cmd := exec.Command("bash", "-c", "cd "+absPath+" && go mod tidy && go fmt ./...")
 			log.Infof("exec: %s", cmd.String())
 			var outBuf, errBuf bytes.Buffer
 			cmd.Stdout = &outBuf
 			cmd.Stderr = &errBuf
 			err = cmd.Run()
 			if err != nil {
-				log.Infof("Err: %s \nStdout: %s \n Stderr: %s", err, outBuf.String(), errBuf.String())
+				log.Infof("Err: %s ", err.Error())
+				log.Info("Stdout: ", outBuf.String())
+				log.Info("Stderr: ", errBuf.String())
 				return
 			}
-			log.Infof(" %s \n fmt files: %s", errBuf.String(), outBuf.String())
+			log.Infof(" fmt files: %s", outBuf.String())
 		}
 
 		time.Sleep(time.Millisecond * 100)
@@ -234,8 +237,9 @@ func GenerateProtobuf(pd *parser.ProtoData, basePath string, needGenGrpcPb bool)
 	protoDir, protoName := filepath.Split(pd.FilePath)
 	args = append(args, fmt.Sprintf("-I=%s", protoDir), protoName)
 
-	protocPath := filepath.ToSlash(filepath.Join(goPath, "bin", protocName))
-	cmd := exec.Command(protocPath, args...)
+	// protocPath := filepath.ToSlash(filepath.Join(goPath, "bin", protocName))
+	// cmd := exec.Command(protocPath, args...)
+	cmd := exec.Command(protocName, args...)
 	log.Info("exec:", cmd.String())
 
 	var outBuf, errBuf bytes.Buffer
