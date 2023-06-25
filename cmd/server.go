@@ -43,7 +43,7 @@ var serverCmd = &cobra.Command{
 		for _, fileName := range onceFiles {
 			onceFileMap[fileName] = true
 		}
-		pd, err := parser.ParseProto(protoPath)
+		pd, err := parser.ParseProtoFile(protoPath)
 		if err != nil {
 			log.Errorf("err: %v", err)
 			return

@@ -49,7 +49,7 @@ var clientCmd = &cobra.Command{
 			onceFileMap[fileName] = true
 		}
 		var err error
-		pd, err := parser.ParseProto(protoPath)
+		pd, err := parser.ParseProtoFile(protoPath)
 		if err != nil {
 			log.Errorf("err: %v", err)
 			return
@@ -82,6 +82,7 @@ var clientCmd = &cobra.Command{
 				return nil
 			}
 			fileName := strings.TrimSuffix(info.Name(), config.TmplConfigFile.Template.FilesFormatSuffix)
+
 			parentPath := strings.TrimRight(strings.TrimPrefix(path, tmpDir), info.Name())
 			targetFile := clientRootDir + parentPath + fileName
 			if util.IsFileExist(targetFile) && onceFileMap[fileName] {
@@ -155,7 +156,7 @@ var clientCmd = &cobra.Command{
 
 func getProtoName(protoPath string) string {
 	_, fname := filepath.Split(protoPath)
-	return strings.TrimRight(fname, ".proto")
+	return strings.TrimSuffix(fname, ".proto")
 }
 
 func checkProtoc() bool {
@@ -203,7 +204,7 @@ sudo ldconfig # refresh shared library cache.`)
 	}
 	return true
 }
-func GenerateProtobuf(pd *parser.ProtoData, basePath string, needGenGrpcPb bool) error {
+func GenerateProtobuf(pd *parser.ParseData, basePath string, needGenGrpcPb bool) error {
 	var err error
 	var args []string
 	var protocName string

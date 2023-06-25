@@ -2,17 +2,18 @@ package parser
 
 import (
 	"encoding/json"
-	"github.com/ml444/gctl/util"
 	"os"
-	"runtime"
 	"strconv"
 	"strings"
+
+	"github.com/ml444/gctl/util"
 
 	"github.com/emicklei/proto"
 	log "github.com/ml444/glog"
 )
 
-func ParseProto(protoFilepath string) (*ProtoData, error) {
+// ParseProtoFile 解析proto文件
+func ParseProtoFile(protoFilepath string) (*ParseData, error) {
 	reader, err := os.Open(protoFilepath)
 	if err != nil {
 		log.Errorf("err: %v", err)
@@ -31,7 +32,7 @@ func ParseProto(protoFilepath string) (*ProtoData, error) {
 		log.Errorf("err: %v", err)
 		return nil, err
 	}
-	protoData := NewProtoData()
+	protoData := NewParseData()
 	protoData.FilePath = protoFilepath
 	handlePackage := func(p *proto.Package) {
 		protoData.PackageName = p.Name
@@ -292,46 +293,46 @@ func Struct2map(data interface{}) (map[string]interface{}, error) {
 	return m, nil
 }
 
-type ProtoData struct {
-	GoVersion    string
-	Ports        []int
-	StartErrCode int
-	ModuleId     int
+// type ProtoData struct {
+// 	GoVersion    string
+// 	Ports        []int
+// 	StartErrCode int
+// 	ModuleId     int
 
-	FilePath         string
-	PackageName      string
-	Options          map[string]string
-	ImportMap        map[string]bool
-	ServiceImportMap map[string][]string
-	ListOptionMap    map[string]*ListReqOption
-	ServiceList      []*Service
-	ErrCodeList      []Enum
-	ModelList        []*proto.Message
-	MessageList      []*Message
-}
+// 	FilePath         string
+// 	PackageName      string
+// 	Options          map[string]string
+// 	ImportMap        map[string]bool
+// 	ServiceImportMap map[string][]string
+// 	ListOptionMap    map[string]*ListReqOption
+// 	ServiceList      []*Service
+// 	ErrCodeList      []Enum
+// 	ModelList        []*proto.Message
+// 	MessageList      []*Message
+// }
 
-type Service struct {
-	ServiceName string
-	RpcList     []*RpcMethod
-}
+// type Service struct {
+// 	ServiceName string
+// 	RpcList     []*RpcMethod
+// }
 
-type RpcMethod struct {
-	Name         string
-	RequestType  string
-	ResponseType string
-	//StreamRequest	bool
-	//StreamResponse	bool
-	//Comment
-	CmdID    string
-	Url      string
-	Flags    string
-	UserType string
-	PermList []string
-	Options  map[string]string
+// type RpcMethod struct {
+// 	Name         string
+// 	RequestType  string
+// 	ResponseType string
+// 	//StreamRequest	bool
+// 	//StreamResponse	bool
+// 	//Comment
+// 	CmdID    string
+// 	Url      string
+// 	Flags    string
+// 	UserType string
+// 	PermList []string
+// 	Options  map[string]string
 
-	CommentLines []string
-	//commentMap   map[string]*linesCommentNode
-}
+// 	CommentLines []string
+// 	//commentMap   map[string]*linesCommentNode
+// }
 
 type Enum struct {
 	Name          string
@@ -353,17 +354,6 @@ type ListReqOption struct {
 	ReqName      string // the name of request
 	EnumName     string
 	EnumFieldMap map[string]string
-}
-
-func NewProtoData() *ProtoData {
-	version := strings.TrimPrefix(runtime.Version(), "go")
-	vList := strings.Split(version, ".")
-	if len(vList) >= 3 {
-		version = strings.Join(vList[:2], ".")
-	}
-	return &ProtoData{
-		GoVersion: version,
-	}
 }
 
 type ProtoVisitor struct {

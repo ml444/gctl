@@ -2,7 +2,6 @@ package parser
 
 import (
 	"fmt"
-	log "github.com/ml444/glog"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -10,6 +9,8 @@ import (
 	"os"
 	"regexp"
 	"strings"
+
+	log "github.com/ml444/glog"
 )
 
 var (
@@ -222,7 +223,7 @@ func WritePbFile(inputPath string, areas []textArea, removeTagComment bool) (err
 	// inject custom tags from tail of file first to preserve order
 	for i := range areas {
 		area := areas[len(areas)-i-1]
-		log.Infof("inject custom tag %q to expression %q", area.InjectTag, string(contents[area.Start-1:area.End-1]))
+		println(fmt.Sprintf("==> inject custom tag %q ", area.InjectTag))
 		contents = injectTag(contents, area, removeTagComment)
 	}
 	if err = os.WriteFile(inputPath, contents, 0o644); err != nil {

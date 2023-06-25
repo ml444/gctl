@@ -4,10 +4,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
+
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	log "github.com/ml444/glog"
-	"strings"
 )
 
 var createTableSQL = `CREATE TABLE IF NOT EXISTS service_init_config  
@@ -170,7 +171,7 @@ func (a *SvcAssign) GetModuleId() (int, error) {
 	var moduleId int
 	err = row.Scan(&moduleId)
 	if err != nil {
-		log.Error(a.SvcGroup, a.SvcName)
+		log.Error(a.SvcGroup, " ", a.SvcName)
 		log.Error(err)
 		return 0, err
 	}

@@ -140,6 +140,7 @@ func ReadYaml(fp string, conf interface{}) error {
 		log.Error(err)
 		return err
 	}
+	fmt.Printf("%#v\n", conf)
 	return nil
 }
 func GetHomeDir() string {
