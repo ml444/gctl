@@ -12,6 +12,7 @@ type ParseData struct {
 	Ports        []int
 	StartErrCode int
 	ModuleId     int
+	ModulePrefix string
 
 	// from proto file
 	FilePath         string

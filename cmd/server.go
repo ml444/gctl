@@ -32,7 +32,9 @@ var serverCmd = &cobra.Command{
 		if serviceGroup == "" && config.DefaultSvcGroup != "" {
 			serviceGroup = config.DefaultSvcGroup
 		}
-		protoPath = GetProtoAbsPath(protoPath)
+
+		serviceName := getServiceName(protoPath)
+		protoPath = config.GetProtoAbsPath(serviceGroup, protoPath)
 		baseDir := config.TargetRootPath
 		tmpDir := GetTemplateServerDir()
 		onceFiles := config.OnceFiles
@@ -48,10 +50,11 @@ var serverCmd = &cobra.Command{
 			log.Errorf("err: %v", err)
 			return
 		}
+		pd.ModulePrefix = config.JoinModulePrefixWithGroup(serviceGroup)
 		if config.EnableAssignPort {
 			var port int
 			svcAssign := util.NewSvcAssign(
-				config.DbDSN, pd.PackageName, serviceGroup,
+				config.DbDSN, serviceName, serviceGroup,
 				config.SvcPortInterval, config.SvcErrcodeInterval,
 				config.SvcGroupInitPortMap, config.SvcGroupInitErrcodeMap,
 			)
@@ -69,7 +72,9 @@ var serverCmd = &cobra.Command{
 			}
 		}
 		tempFileSuffix := config.TmplConfigFile.Template.FilesFormatSuffix
-		serverRootDir := filepath.Join(baseDir, fmt.Sprintf("%sServer", strings.Split(pd.Options["go_package"], ";")[0]))
+		clientRootDir := config.GetTargetDir(serviceGroup, config.TmplConfigFile.Target.RelativeDir.Client, serviceName)
+		// serverRootDir := filepath.Join(baseDir, fmt.Sprintf("%sServer", strings.Split(pd.Options["go_package"], ";")[0]))
+		serverRootDir := config.GetTargetDir(serviceGroup, config.TmplConfigFile.Target.RelativeDir.Server, serviceName)
 		err = filepath.Walk(tmpDir, func(path string, info fs.FileInfo, err error) error {
 			if err != nil {
 				log.Errorf("prevent panic by handling failure accessing a path %q: %v\n", path, err)
@@ -81,6 +86,10 @@ var serverCmd = &cobra.Command{
 			fileName := strings.TrimSuffix(info.Name(), tempFileSuffix)
 			parentPath := strings.TrimRight(strings.TrimPrefix(path, tmpDir), info.Name())
 			targetFile := serverRootDir + parentPath + fileName
+			if strings.HasPrefix(targetFile, clientRootDir) {
+				// skip client files
+				return nil
+			}
 			if util.IsFileExist(targetFile) && onceFileMap[fileName] {
 				log.Printf("[%s] file is exist in this directory, skip it", targetFile)
 				return nil

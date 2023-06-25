@@ -38,7 +38,7 @@ var clientCmd = &cobra.Command{
 			protoPath = args[0]
 			//protoPath = filepath.Join(baseDir, config.GoModulePrefix, fmt.Sprintf("%s.proto", arg))
 		}
-		protoPath = GetProtoAbsPath(protoPath)
+		protoPath = config.GetProtoAbsPath(serviceGroup, protoPath)
 		tmpDir := GetTemplateClientDir()
 		onceFiles := config.OnceFiles
 		log.Info("root location of code generation:", baseDir)
@@ -55,11 +55,11 @@ var clientCmd = &cobra.Command{
 			return
 		}
 		//dataMap["GoVersion"] = strings.TrimPrefix(runtime.Version(), "go")
-
+		serviceName := getServiceName(protoPath)
 		if config.EnableAssignErrcode {
 			var moduleId int
 			svcAssign := util.NewSvcAssign(
-				config.DbDSN, getProtoName(protoPath), serviceGroup,
+				config.DbDSN, serviceName, serviceGroup,
 				config.SvcPortInterval, config.SvcErrcodeInterval,
 				config.SvcGroupInitPortMap, config.SvcGroupInitErrcodeMap,
 			)
@@ -82,9 +82,12 @@ var clientCmd = &cobra.Command{
 				return nil
 			}
 			fileName := strings.TrimSuffix(info.Name(), config.TmplConfigFile.Template.FilesFormatSuffix)
-
-			parentPath := strings.TrimRight(strings.TrimPrefix(path, tmpDir), info.Name())
-			targetFile := clientRootDir + parentPath + fileName
+			log.Info(path)
+			log.Info(tmpDir)
+			log.Info(info.Name())
+			// parentPath := strings.TrimRight(strings.TrimPrefix(path, tmpDir), info.Name())
+			// targetFile := clientRootDir + parentPath + fileName
+			targetFile := filepath.Join(config.GetTargetDir(serviceGroup, config.TmplConfigFile.Target.RelativeDir.Client, serviceName), fileName)
 			if util.IsFileExist(targetFile) && onceFileMap[fileName] {
 				log.Infof("[%s] file is exist in this directory, skip it", targetFile)
 				return nil
@@ -154,7 +157,7 @@ var clientCmd = &cobra.Command{
 	},
 }
 
-func getProtoName(protoPath string) string {
+func getServiceName(protoPath string) string {
 	_, fname := filepath.Split(protoPath)
 	return strings.TrimSuffix(fname, ".proto")
 }
