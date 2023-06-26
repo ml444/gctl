@@ -3,6 +3,9 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"github.com/ml444/gctl/config"
+	"github.com/ml444/gctl/util"
+	"github.com/ml444/gutil/osx"
 	"go/build"
 	"io/fs"
 	"os"
@@ -10,10 +13,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"time"
-
-	"github.com/ml444/gctl/config"
-	"github.com/ml444/gctl/util"
 
 	"github.com/ml444/gctl/parser"
 	log "github.com/ml444/glog"
@@ -38,12 +37,12 @@ var clientCmd = &cobra.Command{
 			protoPath = args[0]
 			//protoPath = filepath.Join(baseDir, config.GoModulePrefix, fmt.Sprintf("%s.proto", arg))
 		}
-		protoPath = config.GetProtoAbsPath(serviceGroup, protoPath)
-		tmpDir := GetTemplateClientDir()
+		protoPath = config.GetTargetProtoAbsPath(serviceGroup, protoPath)
+		tmpDir := config.GetTempClientAbsDir()
 		onceFiles := config.OnceFiles
-		log.Info("root location of code generation:", baseDir)
-		log.Info("template path of code generation:", tmpDir)
-		log.Info("files that are executed only once during initialization:", onceFiles)
+		log.Debug("root location of code generation: ", baseDir)
+		log.Debug("template path of code generation: ", tmpDir)
+		log.Debug("files that are executed only once during initialization:", onceFiles)
 		onceFileMap := map[string]bool{}
 		for _, fileName := range onceFiles {
 			onceFileMap[fileName] = true
@@ -54,15 +53,10 @@ var clientCmd = &cobra.Command{
 			log.Errorf("err: %v", err)
 			return
 		}
-		//dataMap["GoVersion"] = strings.TrimPrefix(runtime.Version(), "go")
 		serviceName := getServiceName(protoPath)
 		if config.EnableAssignErrcode {
 			var moduleId int
-			svcAssign := util.NewSvcAssign(
-				config.DbDSN, serviceName, serviceGroup,
-				config.SvcPortInterval, config.SvcErrcodeInterval,
-				config.SvcGroupInitPortMap, config.SvcGroupInitErrcodeMap,
-			)
+			svcAssign := util.NewSvcAssign(serviceName, serviceGroup)
 			moduleId, err = svcAssign.GetModuleId()
 			if err != nil {
 				log.Error(err)
@@ -70,8 +64,8 @@ var clientCmd = &cobra.Command{
 			}
 			pd.ModuleId = moduleId
 		}
-
-		clientRootDir := filepath.Join(baseDir, strings.Split(pd.Options["go_package"], ";")[0])
+		protoTempPath := config.GetTempProtoAbsPath()
+		clientRootDir := config.GetTargetClientAbsDir(serviceGroup, serviceName)
 		err = filepath.Walk(tmpDir, func(path string, info fs.FileInfo, err error) error {
 			if err != nil {
 				log.Errorf("prevent panic by handling failure accessing a path %q: %v\n", path, err)
@@ -81,20 +75,20 @@ var clientCmd = &cobra.Command{
 				log.Warnf("skipping dir: %+v \n", info.Name())
 				return nil
 			}
-			fileName := strings.TrimSuffix(info.Name(), config.TmplConfigFile.Template.FilesFormatSuffix)
-			log.Info(path)
-			log.Info(tmpDir)
-			log.Info(info.Name())
-			// parentPath := strings.TrimRight(strings.TrimPrefix(path, tmpDir), info.Name())
-			// targetFile := clientRootDir + parentPath + fileName
-			targetFile := filepath.Join(config.GetTargetDir(serviceGroup, config.TmplConfigFile.Target.RelativeDir.Client, serviceName), fileName)
+			if path == protoTempPath {
+				log.Debugf("skipping proto file: %+v \n", path)
+				return nil
+			}
+			fileName := strings.TrimSuffix(info.Name(), config.GetTempFilesFormatSuffix())
+			parentPath := strings.TrimRight(strings.TrimPrefix(path, tmpDir), info.Name())
+			targetFile := clientRootDir + parentPath + fileName
 			if util.IsFileExist(targetFile) && onceFileMap[fileName] {
-				log.Infof("[%s] file is exist in this directory, skip it", targetFile)
+				log.Warnf("[%s] file is exist in this directory, skip it", targetFile)
 				return nil
 			}
 
 			log.Infof("generating file: %s", targetFile)
-			err = parser.GenerateTemplate(targetFile, path, info.Name(), pd, funcMap)
+			err = parser.GenerateTemplate(targetFile, path, pd)
 			if err != nil {
 				return err
 			}
@@ -137,23 +131,10 @@ var clientCmd = &cobra.Command{
 		}
 
 		// go mod tidy && go fmt
-		{
-			cmd := exec.Command("bash", "-c", "cd "+absPath+" && go mod tidy && go fmt ./...")
-			log.Infof("exec: %s", cmd.String())
-			var outBuf, errBuf bytes.Buffer
-			cmd.Stdout = &outBuf
-			cmd.Stderr = &errBuf
-			err = cmd.Run()
-			if err != nil {
-				log.Infof("Err: %s ", err.Error())
-				log.Info("Stdout: ", outBuf.String())
-				log.Info("Stderr: ", errBuf.String())
-				return
-			}
-			log.Infof(" fmt files: %s", outBuf.String())
+		if osx.IsFileExist(filepath.Join(absPath, "go.mod")) {
+			util.CmdExec("cd " + absPath + " && go mod tidy")
+			util.CmdExec("cd " + absPath + " && go fmt ./...")
 		}
-
-		time.Sleep(time.Millisecond * 100)
 	},
 }
 
@@ -268,11 +249,4 @@ func GenerateProtobuf(pd *parser.ParseData, basePath string, needGenGrpcPb bool)
 
 func getIncludePathList() []string {
 	return config.ThirdPartyProtoPath
-}
-
-func GetTemplateClientDir() string {
-	var elems []string
-	elems = append(elems, config.TmplRootDir)
-	elems = append(elems, config.TmplConfigFile.Template.RelativeDir.Client...)
-	return filepath.Join(elems...)
 }

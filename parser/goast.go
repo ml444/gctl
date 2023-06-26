@@ -4,23 +4,22 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
 	log "github.com/ml444/glog"
 )
 
-// 从一个go文件从找出制定后缀的结构体，然后分析结构体里面的方法函数，并排除私有方法函数。
-// ParseServiceMethod()
-func (d *ParseData) ParseGoFile(fpath string) error {
-	src, err := ioutil.ReadFile(fpath)
+// ParseGoFile 从一个go文件从找出制定后缀的结构体，然后分析结构体里面的方法函数，并排除私有方法函数。
+func (pd *ParseData) ParseGoFile(filePath string) error {
+	src, err := os.ReadFile(filePath)
 	if err != nil {
 		log.Error(err.Error())
 		return err
 	}
 	tf := token.NewFileSet()
-	p, err := parser.ParseFile(tf, fpath, src, parser.ParseComments)
+	p, err := parser.ParseFile(tf, filePath, src, parser.ParseComments)
 	if err != nil {
 		log.Error(err.Error())
 		return err
@@ -35,8 +34,9 @@ func (d *ParseData) ParseGoFile(fpath string) error {
 	// 				funcBodyMap["init"] = v.Body.String()
 	// 			}
 	// 		}
+	// 	}
 	// }
-	_, name := filepath.Split(fpath)
+	_, name := filepath.Split(filePath)
 	switch name {
 	case "dao.go":
 		// processing dao.go file
@@ -45,11 +45,11 @@ func (d *ParseData) ParseGoFile(fpath string) error {
 			for k, obj := range p.Scope.Objects {
 				objMap[k] = obj.Kind.String()
 			}
-			d.ObjectMap = objMap
+			pd.ObjectMap = objMap
 		}
 	case "service.go":
 		// processing service.go file
-		d.parseServiceMethod(p)
+		pd.parseServiceMethod(p)
 	}
 
 	return nil
@@ -57,7 +57,7 @@ func (d *ParseData) ParseGoFile(fpath string) error {
 
 // Parse service.go file: find the structure that specifies the suffix from a go file,
 // analyze the method functions inside the structure, and exclude private method functions.
-func (d *ParseData) parseServiceMethod(astFile *ast.File) {
+func (pd *ParseData) parseServiceMethod(astFile *ast.File) {
 	var svcMap = make(map[string]map[string]struct {
 		Req string
 		Rsp string
@@ -98,5 +98,5 @@ func (d *ParseData) parseServiceMethod(astFile *ast.File) {
 			}
 		}
 	}
-	d.ServiceMethodMap = svcMap
+	pd.ServiceMethodMap = svcMap
 }

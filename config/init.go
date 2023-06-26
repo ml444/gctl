@@ -10,14 +10,15 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/ml444/gctl/util"
 	"gopkg.in/yaml.v3"
 
 	log "github.com/ml444/glog"
+	"github.com/ml444/gutil/osx"
 	"github.com/spf13/viper"
 )
 
 const defaultTemplatesName = "gctl-templates"
+const gctlConfigFileName = ".gctl_config.yaml"
 
 var (
 	DbDSN                  string
@@ -30,7 +31,6 @@ var (
 
 	DefaultSvcGroup string
 	TmplRootDir     string
-	TmplConfigFile  *TemplateConfigFile
 
 	GoModulePrefix       string
 	TargetRootPath       string
@@ -43,9 +43,9 @@ func InitGlobalVar() error {
 	var err error
 
 	// read config file
-	confPath := filepath.Join(GetHomeDir(), ".gctl_config.yaml")
-	if util.IsFileExist(confPath) {
-		viper.SetConfigFile(filepath.Join(GetHomeDir(), ".gctl_config.yaml"))
+	confPath := filepath.Join(GetHomeDir(), gctlConfigFileName)
+	if osx.IsFileExist(confPath) {
+		viper.SetConfigFile(filepath.Join(GetHomeDir(), gctlConfigFileName))
 		err = viper.ReadInConfig()
 		if err != nil {
 			println(fmt.Sprintf("Warnning: %s", err))
@@ -92,16 +92,12 @@ func InitGlobalVar() error {
 		}
 	}
 
-	TmplConfigFile = new(TemplateConfigFile)
-	tmplConfPath := filepath.Join(TmplRootDir, "config.yaml")
-	err = ReadYaml(tmplConfPath, TmplConfigFile)
+	err = InitTmplFilesConf()
 	if err != nil {
-		log.Error(err)
+		log.Errorf("err: %v", err)
 		return err
 	}
-	if TmplConfigFile == nil {
-		return errors.New("this template repository is missing a configuration file")
-	}
+
 	GoModulePrefix = viper.GetString(KeyModulePrefix)
 	if GoModulePrefix == "" {
 		fmt.Println(fmt.Sprintf("err: must be set: 'export GCTL_%s=your_repository_host'", KeyModulePrefix))

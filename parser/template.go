@@ -2,6 +2,8 @@ package parser
 
 import (
 	"bytes"
+	"path/filepath"
+	"strings"
 	"text/template"
 
 	"github.com/ml444/gctl/util"
@@ -13,12 +15,28 @@ import (
 //	return GenerateTemplate(fPath, tempDir, tempName, pd, funcMap)
 //}
 
-func GenerateTemplate(fPath string, tempFile, tempName string, data interface{}, funcMap template.FuncMap) error {
+var funcMap = template.FuncMap{
+	"Concat":                   util.Concat,
+	"TrimSpace":                strings.TrimSpace,
+	"TrimPrefix":               strings.TrimPrefix,
+	"HasPrefix":                strings.HasPrefix,
+	"Contains":                 strings.Contains,
+	"ToUpper":                  strings.ToUpper,
+	"ToUpperFirst":             util.ToUpperFirst,
+	"ToLowerFirst":             util.ToLowerFirst,
+	"CamelToSnake":             util.CamelToSnake,
+	"SnakeToCamel":             util.SnakeToCamel,
+	"Add":                      util.Add,
+	"GetStatusCodeFromComment": util.GetStatusCodeFromComment,
+}
+
+func GenerateTemplate(fPath string, tempFile string, data interface{}) error {
 	var err error
 	f, err := util.OpenFile(fPath)
 	if err != nil {
 		return err
 	}
+	_, tempName := filepath.Split(tempFile)
 	temp := template.New(tempName)
 	if funcMap != nil {
 		temp.Funcs(funcMap)

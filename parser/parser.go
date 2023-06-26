@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"errors"
 	"runtime"
 	"strings"
 
@@ -11,6 +12,7 @@ type ParseData struct {
 	GoVersion    string
 	Ports        []int
 	StartErrCode int
+	EndErrCode   int
 	ModuleId     int
 	ModulePrefix string
 
@@ -68,4 +70,12 @@ func NewParseData() *ParseData {
 	return &ParseData{
 		GoVersion: v,
 	}
+}
+
+func (pd *ParseData) GetFirstGoPackage() (string, error) {
+	list := strings.Split(pd.Options["go_package"], ";")
+	if len(list) == 0 {
+		return "", errors.New("no go_package in proto file")
+	}
+	return list[0], nil
 }

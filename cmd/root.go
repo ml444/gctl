@@ -1,15 +1,13 @@
 package cmd
 
 import (
+	"github.com/ml444/glog/level"
 	"os"
-	"strings"
-	"text/template"
 	"time"
 
 	"github.com/ml444/gctl/config"
-	"github.com/ml444/gctl/util"
-
 	log "github.com/ml444/glog"
+	logConf "github.com/ml444/glog/config"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +21,7 @@ var (
 )
 
 func init() {
-	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "If you want to se the debug logs.")
+	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "If you want to se the debug logs, or print all environment variables.")
 	protoCmd.Flags().StringVarP(&protoName, "name", "n", "", "The name of proto")
 	protoCmd.Flags().StringVarP(&serviceGroup, "service-group", "g", "", "a group of service, example: base|sys|biz...")
 
@@ -61,27 +59,19 @@ func Execute() {
 		return
 	}
 
+	if debug {
+		err = log.InitLog(logConf.SetLevel2Logger(level.DebugLevel))
+		if err != nil {
+			println(err.Error())
+		}
+	}
+
 	rootCmd.AddCommand(clientCmd, serverCmd, protoCmd)
 	if err := rootCmd.Execute(); err != nil {
 		log.Error(err)
 		os.Exit(1)
 	}
 	time.Sleep(time.Millisecond * 100)
-}
-
-var funcMap = template.FuncMap{
-	"Concat":                   util.Concat,
-	"TrimSpace":                strings.TrimSpace,
-	"TrimPrefix":               strings.TrimPrefix,
-	"HasPrefix":                strings.HasPrefix,
-	"Contains":                 strings.Contains,
-	"GetStatusCodeFromComment": util.GetStatusCodeFromComment,
-	"ToUpper":                  strings.ToUpper,
-	"ToUpperFirst":             util.ToUpperFirst,
-	"ToLowerFirst":             util.ToLowerFirst,
-	"CamelToSnake":             util.CamelToSnake,
-	"SnakeToCamel":             util.SnakeToCamel,
-	"Add":                      util.Add,
 }
 
 //func init() {

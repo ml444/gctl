@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/ml444/gctl/config"
 	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -33,20 +34,16 @@ type SvcAssign struct {
 	ErrcodeInitMap  map[string]interface{}
 }
 
-func NewSvcAssign(
-	dbDSN, svcName, svcGroup string,
-	portInterval, errcodeInterval int,
-	portInitMap, errcodeInitMap map[string]interface{},
-) *SvcAssign {
+func NewSvcAssign(svcName, svcGroup string) *SvcAssign {
 	return &SvcAssign{
 		db:              nil,
-		DbDSN:           dbDSN,
+		DbDSN:           config.DbDSN,
 		SvcName:         svcName,
 		SvcGroup:        svcGroup,
-		PortInterval:    portInterval,
-		ErrcodeInterval: errcodeInterval,
-		PortInitMap:     portInitMap,
-		ErrcodeInitMap:  errcodeInitMap,
+		PortInterval:    config.SvcPortInterval,
+		ErrcodeInterval: config.SvcErrcodeInterval,
+		PortInitMap:     config.SvcGroupInitPortMap,
+		ErrcodeInitMap:  config.SvcGroupInitErrcodeMap,
 	}
 }
 
