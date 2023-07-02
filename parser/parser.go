@@ -27,6 +27,7 @@ type ParseData struct {
 	ErrCodeList      []Enum
 	ModelList        []*proto.Message
 	MessageList      []*Message
+	ModelFieldList   []string
 
 	// from go file
 	FileName         string

@@ -161,10 +161,7 @@ func ParseProtoFile(protoFilepath string) (*ParseData, error) {
 
 		if strings.HasPrefix(m.Name, "Model") {
 			protoData.ModelList = append(protoData.ModelList, m)
-		} else if strings.HasPrefix(m.Name, "List") && strings.HasSuffix(m.Name, "Req") {
-			if len(vv.EnumFieldList) > 0 {
-				log.Info(vv.EnumFieldList)
-			}
+			protoData.ModelFieldList = append(protoData.ModelFieldList, vv.FieldNameList...)
 		}
 	}
 
@@ -182,6 +179,9 @@ func ParseProtoFile(protoFilepath string) (*ParseData, error) {
 		_, filename := filepath.Split(protoData.FilePath)
 		protoData.PackageName = strings.TrimSuffix(filename, ".proto")
 	}
+
+	// unique ModelFieldList
+	protoData.ModelFieldList = ToUnique(protoData.ModelFieldList)
 	return protoData, nil
 }
 
@@ -201,6 +201,7 @@ type ProtoVisitor struct {
 	//proto.Visitor
 	//proto.RPC
 	Name          string
+	FieldNameList []string
 	EnumFieldList []*proto.EnumField
 	Message       *Message
 }
@@ -231,7 +232,7 @@ func (p *ProtoVisitor) VisitNormalField(i *proto.NormalField) {
 	if p.Message == nil {
 		return
 	}
-
+	p.FieldNameList = append(p.FieldNameList, i.Name)
 	p.Message.FieldList = append(p.Message.FieldList, &MessageField{NormalField: i})
 }
 
