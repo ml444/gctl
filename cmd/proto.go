@@ -19,7 +19,7 @@ var protoCmd = &cobra.Command{
 			return
 		}
 		if serviceGroup == "" {
-			serviceGroup = config.DefaultSvcGroup
+			serviceGroup = config.GlobalConfig.DefaultSvcGroup
 		}
 		//modulePrefix := config.JoinModulePrefixWithGroup(serviceGroup)
 		targetFilepath := config.GetTargetProtoAbsPath(serviceGroup, protoName)
@@ -34,7 +34,7 @@ var protoCmd = &cobra.Command{
 
 		var firstErrcode = 1
 		var endErrCode = 1 << 31
-		if config.EnableAssignErrcode {
+		if config.GlobalConfig.EnableAssignErrcode {
 			var err error
 			var errCode int
 			svcAssign := util.NewSvcAssign(protoName, serviceGroup)
@@ -45,7 +45,7 @@ var protoCmd = &cobra.Command{
 			}
 			if errCode != 0 {
 				firstErrcode = errCode
-				endErrCode = errCode + config.SvcErrcodeInterval - 1
+				endErrCode = errCode + config.GlobalConfig.SvcErrcodeInterval - 1
 			}
 		}
 		pd.StartErrCode = firstErrcode

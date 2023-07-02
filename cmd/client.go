@@ -29,17 +29,17 @@ var clientCmd = &cobra.Command{
 			log.Error("You must provide the file of proto: gctl client -p=<protoFilepath> or gctl client <NAME>")
 			return
 		}
-		if serviceGroup == "" && config.DefaultSvcGroup != "" {
-			serviceGroup = config.DefaultSvcGroup
+		if serviceGroup == "" && config.GlobalConfig.DefaultSvcGroup != "" {
+			serviceGroup = config.GlobalConfig.DefaultSvcGroup
 		}
-		baseDir := config.TargetRootPath
+		baseDir := config.GlobalConfig.TargetRootPath
 		if protoPath == "" {
 			protoPath = args[0]
-			//protoPath = filepath.Join(baseDir, config.GoModulePrefix, fmt.Sprintf("%s.proto", arg))
+			//protoPath = filepath.Join(baseDir, config.GlobalConfig.GoModulePrefix, fmt.Sprintf("%s.proto", arg))
 		}
 		protoPath = config.GetTargetProtoAbsPath(serviceGroup, protoPath)
 		tmpDir := config.GetTempClientAbsDir()
-		onceFiles := config.OnceFiles
+		onceFiles := config.GlobalConfig.OnceFiles
 		log.Debug("root location of code generation: ", baseDir)
 		log.Debug("template path of code generation: ", tmpDir)
 		log.Debug("files that are executed only once during initialization:", onceFiles)
@@ -54,7 +54,7 @@ var clientCmd = &cobra.Command{
 			return
 		}
 		serviceName := getServiceName(protoPath)
-		if config.EnableAssignErrcode {
+		if config.GlobalConfig.EnableAssignErrcode {
 			var moduleId int
 			svcAssign := util.NewSvcAssign(serviceName, serviceGroup)
 			moduleId, err = svcAssign.GetModuleId()
@@ -248,5 +248,5 @@ func GenerateProtobuf(pd *parser.ParseData, basePath string, needGenGrpcPb bool)
 }
 
 func getIncludePathList() []string {
-	return config.ThirdPartyProtoPath
+	return config.GlobalConfig.AllProtoPathList
 }

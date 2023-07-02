@@ -2,12 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/ml444/gctl/config"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/ml444/gctl/config"
 	"github.com/ml444/gctl/util"
 
 	"github.com/ml444/gctl/parser"
@@ -28,14 +28,14 @@ var serverCmd = &cobra.Command{
 		if protoPath == "" {
 			protoPath = args[0]
 		}
-		if serviceGroup == "" && config.DefaultSvcGroup != "" {
-			serviceGroup = config.DefaultSvcGroup
+		if serviceGroup == "" && config.GlobalConfig.DefaultSvcGroup != "" {
+			serviceGroup = config.GlobalConfig.DefaultSvcGroup
 		}
 
 		serviceName := getServiceName(protoPath)
 		protoPath = config.GetTargetProtoAbsPath(serviceGroup, protoPath)
-		//baseDir := config.TargetRootPath
-		onceFiles := config.OnceFiles
+		//baseDir := config.GlobalConfig.TargetRootPath
+		onceFiles := config.GlobalConfig.OnceFiles
 		onceFileMap := map[string]bool{}
 		for _, fileName := range onceFiles {
 			onceFileMap[fileName] = true
@@ -46,7 +46,7 @@ var serverCmd = &cobra.Command{
 			return
 		}
 		pd.ModulePrefix = config.JoinModulePrefixWithGroup(serviceGroup)
-		if config.EnableAssignPort {
+		if config.GlobalConfig.EnableAssignPort {
 			var port int
 			svcAssign := util.NewSvcAssign(serviceName, serviceGroup)
 			err = svcAssign.GetOrAssignPortAndErrcode(&port, nil)
@@ -56,7 +56,7 @@ var serverCmd = &cobra.Command{
 			}
 			if port != 0 {
 				var ports []int
-				for i := 0; i < config.SvcPortInterval; i++ {
+				for i := 0; i < config.GlobalConfig.SvcPortInterval; i++ {
 					ports = append(ports, port+i)
 				}
 				pd.Ports = ports

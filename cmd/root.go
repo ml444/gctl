@@ -1,11 +1,11 @@
 package cmd
 
 import (
+	"github.com/ml444/gctl/config"
 	"github.com/ml444/glog/level"
 	"os"
 	"time"
 
-	"github.com/ml444/gctl/config"
 	log "github.com/ml444/glog"
 	logConf "github.com/ml444/glog/config"
 	"github.com/spf13/cobra"

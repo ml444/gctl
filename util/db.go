@@ -37,13 +37,13 @@ type SvcAssign struct {
 func NewSvcAssign(svcName, svcGroup string) *SvcAssign {
 	return &SvcAssign{
 		db:              nil,
-		DbDSN:           config.DbDSN,
+		DbDSN:           config.GlobalConfig.DbURI,
 		SvcName:         svcName,
 		SvcGroup:        svcGroup,
-		PortInterval:    config.SvcPortInterval,
-		ErrcodeInterval: config.SvcErrcodeInterval,
-		PortInitMap:     config.SvcGroupInitPortMap,
-		ErrcodeInitMap:  config.SvcGroupInitErrcodeMap,
+		PortInterval:    config.GlobalConfig.SvcPortInterval,
+		ErrcodeInterval: config.GlobalConfig.SvcErrcodeInterval,
+		PortInitMap:     config.GlobalConfig.SvcGroupInitPortMap,
+		ErrcodeInitMap:  config.GlobalConfig.SvcGroupInitErrcodeMap,
 	}
 }
 

@@ -34,7 +34,7 @@ type TemplateConfigFile struct {
 
 func InitTmplFilesConf() error {
 	var err error
-	tmplConfPath := filepath.Join(TmplRootDir, "config.yaml")
+	tmplConfPath := filepath.Join(GlobalConfig.TmplRootDir, "config.yaml")
 	err = ReadYaml(tmplConfPath, &TmplFilesConf)
 	if err != nil {
 		return err
@@ -54,7 +54,7 @@ func GetTempFilesFormatSuffix() string {
 
 func GetTempProtoAbsPath() string {
 	var elems []string
-	elems = append(elems, TmplRootDir)
+	elems = append(elems, GlobalConfig.TmplRootDir)
 	elems = append(elems, TmplFilesConf.Template.RelativeDir.Proto...)
 	elems = append(elems, GetTempProtoFilename())
 	return filepath.Join(elems...)
@@ -62,13 +62,13 @@ func GetTempProtoAbsPath() string {
 
 func GetTempClientAbsDir() string {
 	var elems []string
-	elems = append(elems, TmplRootDir)
+	elems = append(elems, GlobalConfig.TmplRootDir)
 	elems = append(elems, TmplFilesConf.Template.RelativeDir.Client...)
 	return filepath.Join(elems...)
 }
 func GetTempServerAbsDir() string {
 	var elems []string
-	elems = append(elems, TmplRootDir)
+	elems = append(elems, GlobalConfig.TmplRootDir)
 	elems = append(elems, TmplFilesConf.Template.RelativeDir.Server...)
 	return filepath.Join(elems...)
 }
@@ -79,13 +79,13 @@ func GetTargetProtoAbsPath(serviceGroup, protoName string) string {
 	}
 	var elems []string
 	var useCentralRepo bool
-	if ProtoCentralRepoPath != "" {
+	if GlobalConfig.ProtoCentralRepoPath != "" {
 		useCentralRepo = true
 	}
 	if useCentralRepo {
-		elems = append(elems, ProtoCentralRepoPath)
+		elems = append(elems, GlobalConfig.ProtoCentralRepoPath)
 	} else {
-		elems = append(elems, filepath.Join(TargetRootPath, GoModulePrefix))
+		elems = append(elems, filepath.Join(GlobalConfig.TargetRootPath, GlobalConfig.GoModulePrefix))
 	}
 	if serviceGroup != "" {
 		elems = append(elems, serviceGroup)
@@ -107,7 +107,7 @@ func GetTargetProtoAbsPath(serviceGroup, protoName string) string {
 }
 func GetTargetClientAbsDir(serviceGroup, serviceName string) string {
 	var elems []string
-	elems = append(elems, filepath.Join(TargetRootPath, GoModulePrefix))
+	elems = append(elems, filepath.Join(GlobalConfig.TargetRootPath, GlobalConfig.GoModulePrefix))
 	if serviceGroup != "" {
 		elems = append(elems, serviceGroup)
 	}
@@ -118,7 +118,7 @@ func GetTargetClientAbsDir(serviceGroup, serviceName string) string {
 }
 func GetTargetServerAbsDir(serviceGroup, serviceName string) string {
 	var elems []string
-	elems = append(elems, filepath.Join(TargetRootPath, GoModulePrefix))
+	elems = append(elems, filepath.Join(GlobalConfig.TargetRootPath, GlobalConfig.GoModulePrefix))
 	if serviceGroup != "" {
 		elems = append(elems, serviceGroup)
 	}

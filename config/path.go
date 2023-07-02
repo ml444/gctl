@@ -7,7 +7,7 @@ import (
 
 func GetTargetDir(serviceGroup string, relativeDir []string, serviceName string) string {
 	var elems []string
-	elems = append(elems, filepath.Join(TargetRootPath, GoModulePrefix))
+	elems = append(elems, filepath.Join(GlobalConfig.TargetRootPath, GlobalConfig.GoModulePrefix))
 	if serviceGroup != "" {
 		elems = append(elems, serviceGroup)
 	}
@@ -18,7 +18,7 @@ func GetTargetDir(serviceGroup string, relativeDir []string, serviceName string)
 }
 
 func JoinModulePrefixWithGroup(serviceGroup string) string {
-	modulePrefix := GoModulePrefix
+	modulePrefix := GlobalConfig.GoModulePrefix
 	if serviceGroup != "" {
 		return filepath.Join(modulePrefix, serviceGroup)
 	}
