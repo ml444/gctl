@@ -24,8 +24,8 @@ var funcMap = template.FuncMap{
 	"ToUpper":                  strings.ToUpper,
 	"ToUpperFirst":             util.ToUpperFirst,
 	"ToLowerFirst":             util.ToLowerFirst,
-	"CamelToSnake":             util.CamelToSnake,
-	"SnakeToCamel":             util.SnakeToCamel,
+	"ToSnakeCase":              util.ToSnakeCase,
+	"ToCamelCase":              util.ToCamelCase,
 	"Add":                      util.Add,
 	"GetStatusCodeFromComment": util.GetStatusCodeFromComment,
 }
@@ -62,7 +62,7 @@ var svcMethodTemp = `
 {{$pn := .PackageName}}
 
 {{ range $i, $svc := .ServiceList }}
-{{$sn := SnakeToCamel $svc.ServiceName}}
+{{$sn := ToCamelCase $svc.ServiceName}}
 {{$svcName := Concat $sn "Service" }}
 
 {{ range $j, $v := $svc.RpcList }}

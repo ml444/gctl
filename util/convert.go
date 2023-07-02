@@ -52,7 +52,7 @@ func ToLowerFirst(s string) string {
 	return s
 }
 
-func CamelToSnake(s string) string {
+func ToSnakeCase(s string) string {
 	data := make([]byte, 0, len(s)*2)
 	j := false
 	num := len(s)
@@ -69,7 +69,7 @@ func CamelToSnake(s string) string {
 	return strings.ToLower(string(data[:]))
 }
 
-func SnakeToCamel(s string) string {
+func ToCamelCase(s string) string {
 	data := make([]byte, 0, len(s))
 	j := false
 	k := false
