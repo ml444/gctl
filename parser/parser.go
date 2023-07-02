@@ -50,15 +50,32 @@ type RpcMethod struct {
 	//StreamRequest	bool
 	//StreamResponse	bool
 	//Comment
-	CmdID    string
-	Url      string
-	Flags    string
-	UserType string
-	PermList []string
-	Options  map[string]string
+	Options map[string]string
 
 	CommentLines []string
 	//commentMap   map[string]*linesCommentNode
+}
+
+type Enum struct {
+	Name          string
+	EnumFieldList []*proto.EnumField
+}
+
+type Message struct {
+	Name      string
+	FieldList []*MessageField
+}
+
+type MessageField struct {
+	*proto.MapField
+	*proto.NormalField
+	*Message
+}
+
+type ListReqOption struct {
+	ReqName      string // the name of request
+	EnumName     string
+	EnumFieldMap map[string]string
 }
 
 func NewParseData() *ParseData {
