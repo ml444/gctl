@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"strings"
+	
 	"github.com/ml444/gctl/config"
 	"github.com/ml444/gctl/util"
 
@@ -16,6 +18,9 @@ var protoCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		if protoName == "" {
 			log.Error("proto name must be input:[-n=xxx]")
+			return
+		}
+		if !validate(protoName) {
 			return
 		}
 		if serviceGroup == "" {
@@ -62,4 +67,12 @@ var protoCmd = &cobra.Command{
 		}
 		log.Info("generate proto file success: ", targetFilepath)
 	},
+}
+
+func validate(name string) bool {
+	if strings.Contains(name, "-") {
+		log.Error("prohibited use of '-'")
+		return false
+	}
+	return true
 }
