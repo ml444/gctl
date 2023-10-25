@@ -105,6 +105,9 @@ func GetTargetProtoAbsPath(serviceGroup, protoName string) string {
 	elems = append(elems, protoName)
 	return filepath.Join(elems...)
 }
+func GetTargetClientAbsDir0(packagePath string) string {
+	return filepath.Join(GlobalConfig.TargetRootPath, packagePath)
+}
 func GetTargetClientAbsDir(serviceGroup, serviceName string) string {
 	var elems []string
 	elems = append(elems, filepath.Join(GlobalConfig.TargetRootPath, GlobalConfig.GoModulePrefix))

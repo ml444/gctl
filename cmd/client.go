@@ -3,9 +3,6 @@ package cmd
 import (
 	"bytes"
 	"fmt"
-	"github.com/ml444/gctl/config"
-	"github.com/ml444/gctl/util"
-	"github.com/ml444/gutil/osx"
 	"go/build"
 	"io/fs"
 	"os"
@@ -14,9 +11,15 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/ml444/gctl/parser"
+	"github.com/ml444/gutil/osx"
+
+	"github.com/ml444/gctl/config"
+	"github.com/ml444/gctl/util"
+
 	log "github.com/ml444/glog"
 	"github.com/spf13/cobra"
+
+	"github.com/ml444/gctl/parser"
 )
 
 var clientCmd = &cobra.Command{
@@ -65,7 +68,15 @@ var clientCmd = &cobra.Command{
 			pd.ModuleId = moduleId
 		}
 		protoTempPath := config.GetTempProtoAbsPath()
-		clientRootDir := config.GetTargetClientAbsDir(serviceGroup, serviceName)
+		var clientRootDir string
+		if pkgPath := pd.Options["go_package"]; pkgPath != "" {
+			if strings.Contains(pkgPath, ";") {
+				pkgPath = strings.Split(pkgPath, ";")[0]
+			}
+			clientRootDir = config.GetTargetClientAbsDir0(pkgPath)
+		} else {
+			clientRootDir = config.GetTargetClientAbsDir(serviceGroup, serviceName)
+		}
 		err = filepath.Walk(tmpDir, func(path string, info fs.FileInfo, err error) error {
 			if err != nil {
 				log.Errorf("prevent panic by handling failure accessing a path %q: %v\n", path, err)
@@ -87,7 +98,7 @@ var clientCmd = &cobra.Command{
 				return nil
 			}
 
-			log.Infof("generating file: %s", targetFile)
+			log.Infof("generating file: %s \n", targetFile)
 			err = parser.GenerateTemplate(targetFile, path, pd)
 			if err != nil {
 				return err
@@ -208,7 +219,9 @@ func GenerateProtobuf(pd *parser.ParseData, basePath string, needGenGrpcPb bool)
 	protoGenGoPath := filepath.ToSlash(filepath.Join(goPath, "bin", protoGenGoName))
 	args = append(args, fmt.Sprintf("--plugin=protoc-gen-go=%s", protoGenGoPath))
 	args = append(args, fmt.Sprintf("--go_out=%s", filepath.ToSlash(basePath)))
+	args = append(args, fmt.Sprintf("--go-http_out=%s", filepath.ToSlash(basePath)))
 	args = append(args, fmt.Sprintf("--validate_out=lang=go:%s", filepath.ToSlash(basePath)))
+	args = append(args, fmt.Sprintf("--openapi_out=%s", filepath.ToSlash(basePath)))
 	if needGenGrpcPb {
 		args = append(args, fmt.Sprintf("--go-grpc_out=%s", filepath.ToSlash(basePath)))
 	}
