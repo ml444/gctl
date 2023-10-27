@@ -158,43 +158,7 @@ func checkProtoc() bool {
 	p := exec.Command("protoc")
 	if p.Run() != nil {
 		log.Error("Please install protoc first and than rerun the command")
-		switch runtime.GOOS {
-		case "windows":
-			log.Warn(
-				`Install proto3.
-https://github.com/google/protobuf/releases
-Update protoc Go bindings via
-> go get -u github.com/golang/protobuf/proto
-> go get -u github.com/golang/protobuf/protoc-gen-go
-
-See also
-https://github.com/grpc/grpc-go/tree/master/examples`,
-			)
-		case "darwin":
-			log.Warn(
-				`Install proto3 from source macOS only.
-> brew install autoconf automake libtool
-> git clone https://github.com/google/protobuf
-> ./autogen.sh ; ./configure ; make ; make install
-
-Update protoc Go bindings via
-> go get -u github.com/golang/protobuf/{proto,protoc-gen-go}
-
-See also
-https://github.com/grpc/grpc-go/tree/master/examples`,
-			)
-		default:
-			log.Warn(`Install proto3
-sudo apt-get install -y git autoconf automake libtool curl make g++ unzip
-git clone https://github.com/google/protobuf.git
-cd protobuf/
-./autogen.sh
-./configure
-make
-make check
-sudo make install
-sudo ldconfig # refresh shared library cache.`)
-		}
+		log.Warn("See (https://github.com/ml444/gctl/README.md#install-protoc)")
 		return false
 	}
 	return true

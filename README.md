@@ -3,14 +3,42 @@
 
 A code generation and checking tool for Go microservices
 
-## install
-> `gctl` requires `protoc`,so please install [protoc](https://github.com/protocolbuffers/protobuf/releases) before you start using it.
+## Install protoc
+> `gctl` requires `protoc`,so please install [protoc](https://github.com/protocolbuffers/protobuf/releases) before you start using it. 
+1. Install proto3 from binary
+   Download the latest release from [protoc](https://github.com/protocolbuffers/protobuf/releases)
+2. Install proto3 from source macOS only.
+   ```shell
+   > brew install autoconf automake libtool
+   > git clone https://github.com/google/protobuf
+   > ./autogen.sh ; ./configure ; make ; make install
+   ```
+3. Install protoc from source.
+   ```shell
+   sudo apt-get install -y git autoconf automake libtool curl make g++ unzip
+   git clone https://github.com/google/protobuf.git
+   cd protobuf/
+   ./autogen.sh
+   ./configure
+   make
+   make check
+   sudo make install
+   sudo ldconfig # refresh shared library cache.
+   ```
+### Install protoc plugins
 ```shell
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 	go install github.com/envoyproxy/protoc-gen-validate@latest
 	go install github.com/ml444/gctl@latest
 ```
+
+# See also
+> https://github.com/grpc/grpc-go/tree/master/examples
+
+
+## Usage
+
 
 ## 配置
 1. **Configuration by environment variables**
