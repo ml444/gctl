@@ -2,8 +2,12 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/ml444/gkit/log"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -30,6 +34,21 @@ type TemplateConfigFile struct {
 			Server []string `yaml:"server"`
 		} `yaml:"relativeDir"`
 	} `yaml:"template"`
+}
+
+func ReadYaml(fp string, conf interface{}) error {
+	yamlFile, err := os.ReadFile(fp)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+	err = yaml.Unmarshal(yamlFile, conf)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+	//log.Debugf("%+v\n", conf)
+	return nil
 }
 
 func InitTmplFilesConf() error {

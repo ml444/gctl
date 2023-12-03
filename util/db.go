@@ -4,8 +4,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/ml444/gctl/config"
 	"strings"
+
+	"github.com/ml444/gctl/config"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
@@ -30,8 +31,8 @@ type SvcAssign struct {
 	SvcGroup        string
 	PortInterval    int
 	ErrcodeInterval int
-	PortInitMap     map[string]interface{}
-	ErrcodeInitMap  map[string]interface{}
+	PortInitMap     map[string]int
+	ErrcodeInitMap  map[string]int
 }
 
 func NewSvcAssign(svcName, svcGroup string) *SvcAssign {

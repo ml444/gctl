@@ -2,13 +2,14 @@ package cmd
 
 import (
 	"strings"
-	
+
 	"github.com/ml444/gctl/config"
 	"github.com/ml444/gctl/util"
 
-	"github.com/ml444/gctl/parser"
-	log "github.com/ml444/glog"
+	"github.com/ml444/gkit/log"
 	"github.com/spf13/cobra"
+
+	"github.com/ml444/gctl/parser"
 )
 
 var protoCmd = &cobra.Command{
@@ -16,8 +17,14 @@ var protoCmd = &cobra.Command{
 	Short:   "init proto file",
 	Aliases: []string{"p"},
 	Run: func(cmd *cobra.Command, args []string) {
-		if protoName == "" {
-			log.Error("proto name must be input:[-n=xxx]")
+		var err error
+		if protoName == "" && len(args) == 0 {
+			log.Error("proto name must be provided")
+			return
+		}
+		err = config.InitTmplFilesConf()
+		if err != nil {
+			log.Errorf("err: %v", err)
 			return
 		}
 		if !validate(protoName) {
@@ -56,7 +63,7 @@ var protoCmd = &cobra.Command{
 		pd.StartErrCode = firstErrcode
 		pd.EndErrCode = endErrCode
 
-		err := parser.GenerateTemplate(
+		err = parser.GenerateTemplate(
 			targetFilepath,
 			config.GetTempProtoAbsPath(),
 			pd,

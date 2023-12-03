@@ -1,10 +1,12 @@
 package cmd
 
 import (
-	"github.com/ml444/gctl/config"
-	"github.com/ml444/glog/level"
 	"os"
 	"time"
+
+	"github.com/ml444/glog/level"
+
+	"github.com/ml444/gctl/config"
 
 	log "github.com/ml444/glog"
 	logConf "github.com/ml444/glog/config"
@@ -52,7 +54,6 @@ var rootCmd = &cobra.Command{
 func Execute() {
 	var err error
 
-	config.SetDefaults()
 	err = config.InitGlobalVar()
 	if err != nil {
 		println(err.Error())
@@ -73,12 +74,3 @@ func Execute() {
 	}
 	time.Sleep(time.Millisecond * 100)
 }
-
-//func init() {
-//	rootCmd.PersistentFlags().BoolP("debug", "d", false, "If you want to se the debug logs.")
-//	rootCmd.PersistentFlags().BoolP("force", "f", false, "Force overide existing files without asking.")
-//	rootCmd.PersistentFlags().StringP("folder", "b", "", "If you want to specify the base folder of the project.")
-//	viper.BindPFlag("gctl_folder", rootCmd.PersistentFlags().Lookup("folder"))
-//	viper.BindPFlag("gctl_force", rootCmd.PersistentFlags().Lookup("force"))
-//	viper.BindPFlag("gctl_debug", rootCmd.PersistentFlags().Lookup("debug"))
-//}
