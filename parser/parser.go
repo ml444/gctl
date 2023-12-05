@@ -19,6 +19,7 @@ type ParseData struct {
 	// from proto file
 	FilePath         string
 	PackageName      string
+	GoPackage        string
 	Options          map[string]string
 	ImportMap        map[string]bool
 	ServiceImportMap map[string][]string

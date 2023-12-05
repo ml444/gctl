@@ -12,32 +12,48 @@ import (
 	"github.com/ml444/gutil/osx"
 )
 
-const defaultTemplatesName = "gctl-templates"
 const gctlConfigFileName = ".gctl_config.yaml"
-const defaultTemplateProjectName = "separation_templates"
 
 var GlobalConfig Config
 var cfg *config.Config
 
 type Config struct {
-	DbURI                  string         `yaml:"DB_URI" env:"name=GCTL_DB_URI"`
-	EnableAssignPort       bool           `yaml:"ENABLE_ASSIGN_PORT" env:"name=GCTL_ENABLE_ASSIGN_PORT;default=false"`
-	EnableAssignErrcode    bool           `yaml:"ENABLE_ASSIGN_ERRCODE" env:"name=GCTL_ENABLE_ASSIGN_ERRCODE;default=false"`
-	SvcErrcodeInterval     int            `yaml:"SVC_ERRCODE_INTERVAL" env:"name=GCTL_SVC_ERRCODE_INTERVAL;default=1000"`
-	SvcPortInterval        int            `yaml:"SVC_PORT_INTERVAL" env:"name=GCTL_SVC_PORT_INTERVAL;default=10"`
-	SvcGroupInitPortMap    map[string]int `yaml:"SVC_GROUP_INIT_PORT_MAP" env:"name=GCTL_SVC_GROUP_INIT_PORT_MAP"`
-	SvcGroupInitErrcodeMap map[string]int `yaml:"SVC_GROUP_INIT_ERRCODE_MAP" env:"name=GCTL_SVC_GROUP_INIT_ERRCODE_MAP"`
+	DbURI                  string         `yaml:"DbURI" env:"name=GCTL_DB_URI"`
+	EnableAssignPort       bool           `yaml:"EnableAssignPort" env:"name=GCTL_ENABLE_ASSIGN_PORT;default=false"`
+	EnableAssignErrcode    bool           `yaml:"EnableAssignErrcode" env:"name=GCTL_ENABLE_ASSIGN_ERRCODE;default=false"`
+	SvcErrcodeInterval     int            `yaml:"SvcErrcodeInterval" env:"name=GCTL_SVC_ERRCODE_INTERVAL;default=1000"`
+	SvcPortInterval        int            `yaml:"SvcPortInterval" env:"name=GCTL_SVC_PORT_INTERVAL;default=10"`
+	SvcGroupInitPortMap    map[string]int `yaml:"SvcGroupInitPortMap" env:"name=GCTL_SVC_GROUP_INIT_PORT_MAP"`
+	SvcGroupInitErrcodeMap map[string]int `yaml:"SvcGroupInitErrcodeMap" env:"name=GCTL_SVC_GROUP_INIT_ERRCODE_MAP"`
 
-	DefaultSvcGroup string `yaml:"DEFAULT_SERVICE_GROUP" env:"name=GCTL_DEFAULT_SERVICE_GROUP"`
-	TmplRootDir     string `yaml:"TEMPLATES_ROOT_DIR" env:"name=GCTL_TEMPLATES_ROOT_DIR"`
+	TargetBaseDir        string   `yaml:"TargetBaseDir" env:"name=GCTL_TARGET_BASE_DIR"`
+	DefaultSvcGroup      string   `yaml:"DefaultSvcGroup" env:"name=GCTL_DEFAULT_SVC_GROUP"`
+	GoModulePrefix       string   `yaml:"GoModulePrefix" env:"name=GCTL_MODULE_PREFIX"`
+	OnceFiles            []string `yaml:"OnceFiles" env:"name=GCTL_ONCE_FILES;default=.gitignore,go.mod,.editorconfig,README.md,Dockerfile,Makefile"`
+	AllProtoPathList     []string `yaml:"ProtoPaths" env:"name=GCTL_PROTO_PATHS"`
+	ProtoCentralRepoPath string   `yaml:"ProtoCentralRepoPath" env:"name=GCTL_PROTO_CENTRAL_REPO_PATH"`
 
-	GoModulePrefix       string   `yaml:"MODULE_PREFIX" env:"name=GCTL_MODULE_PREFIX"`
-	TargetRootPath       string   `yaml:"TARGET_ROOT_PATH" env:"name=GCTL_TARGET_ROOT_PATH"`
-	OnceFiles            []string `yaml:"ONCE_FILES" env:"name=GCTL_ONCE_FILES;default=.gitignore,go.mod,.editorconfig,README.md,Dockerfile,Makefile"`
-	AllProtoPathList     []string `yaml:"PROTO_PATHS" env:"name=GCTL_THIRD_PARTY_PROTO_PATH"`
-	ProtoCentralRepoPath string   `yaml:"PROTO_CENTRAL_REPO_PATH" env:"name=GCTL_PROTO_CENTRAL_REPO_PATH"`
+	TemplatesBaseDir string          `yaml:"TemplatesBaseDir" env:"name=GCTL_TEMPLATES_BASE_DIR"`
+	TemplatesConf    *TemplateConfig `yaml:"TemplatesConf"`
+}
 
-	//TmplFilesConf *TemplateConfigFile `yaml:"-"`
+type TemplateConfig struct {
+	Target struct {
+		RelativeDir struct {
+			Proto  []string `yaml:"proto"`
+			Client []string `yaml:"client"`
+			Server []string `yaml:"server"`
+		} `yaml:"relativeDir"`
+	} `yaml:"target"`
+	Template struct {
+		FilesFormatSuffix string `yaml:"filesFormatSuffix"`
+		ProtoFilename     string `yaml:"protoFilename"`
+		RelativeDir       struct {
+			Proto  []string `yaml:"proto"`
+			Client []string `yaml:"client"`
+			Server []string `yaml:"server"`
+		} `yaml:"relativeDir"`
+	} `yaml:"template"`
 }
 
 func InitConfig() error {
@@ -87,10 +103,10 @@ func InitGlobalVar() error {
 	if GlobalConfig.ProtoCentralRepoPath != "" {
 		GlobalConfig.AllProtoPathList = append(GlobalConfig.AllProtoPathList, GlobalConfig.ProtoCentralRepoPath)
 	}
-	//GlobalConfig.TargetRootPath = viper.GetString(KeyTargetRootPath)
-	//GlobalConfig.TmplRootDir = viper.GetString(KeyTemplateRootDir)
-	//if GlobalConfig.TmplRootDir == "" {
-	//	cmd := exec.Command("bash", "-c", "cd "+GlobalConfig.TargetRootPath+" && git clone https://github.com/ml444/gctl-templates.git")
+	//GlobalConfig.TargetBaseDir = viper.GetString(KeyTargetRootPath)
+	//GlobalConfig.TemplatesBaseDir = viper.GetString(KeyTemplateRootDir)
+	//if GlobalConfig.TemplatesBaseDir == "" {
+	//	cmd := exec.Command("bash", "-c", "cd "+GlobalConfig.TargetBaseDir+" && git clone https://github.com/ml444/gctl-templates.git")
 	//	log.Infof("exec: %s", cmd.String())
 	//	var outBuf, errBuf bytes.Buffer
 	//	cmd.Stdout = &outBuf
@@ -101,18 +117,18 @@ func InitGlobalVar() error {
 	//		return err
 	//	}
 	//	log.Infof(" %s", errBuf.String())
-	//	GlobalConfig.TmplRootDir = filepath.Join(GlobalConfig.TargetRootPath, defaultTemplatesName, defaultTemplateProjectName)
-	//	GlobalConfig.AllProtoPathList = append(GlobalConfig.AllProtoPathList, filepath.Join(GlobalConfig.TargetRootPath, defaultTemplatesName, "protos"))
+	//	GlobalConfig.TemplatesBaseDir = filepath.Join(GlobalConfig.TargetBaseDir, defaultTemplatesName, defaultTemplateProjectName)
+	//	GlobalConfig.AllProtoPathList = append(GlobalConfig.AllProtoPathList, filepath.Join(GlobalConfig.TargetBaseDir, defaultTemplatesName, "protos"))
 	//	//fmt.Println(fmt.Sprintf("err: must be set: 'export GCTL_%s=/your/path'", KeyTemplateRootDir))
 	//	//return errors.New(fmt.Sprintf("missing environment variable: GCTL_%s", KeyTemplateRootDir))
 	//} else {
-	//	if strings.Contains(GlobalConfig.TmplRootDir, defaultTemplatesName) {
-	//		sList := strings.Split(GlobalConfig.TmplRootDir, defaultTemplatesName)
+	//	if strings.Contains(GlobalConfig.TemplatesBaseDir, defaultTemplatesName) {
+	//		sList := strings.Split(GlobalConfig.TemplatesBaseDir, defaultTemplatesName)
 	//		baseDir := strings.TrimSuffix(sList[0], string(os.PathSeparator))
 	//		GlobalConfig.AllProtoPathList = append(GlobalConfig.AllProtoPathList, filepath.Join(baseDir, defaultTemplatesName, "protofiles"))
 	//	}
 	//}
-	if GlobalConfig.TmplRootDir != "" {
+	if GlobalConfig.TemplatesBaseDir != "" {
 		err = InitTmplFilesConf()
 		if err != nil {
 			log.Errorf("err: %v", err)
@@ -138,8 +154,8 @@ func PrintImportantVars() {
 		}
 		return nil
 	})
-	//fmt.Printf("===> GCTL_TEMPLATES_ROOT_DIR=%s\n", GlobalConfig.TmplRootDir)
-	//fmt.Printf("===> GCTL_TARGET_ROOT_PATH=%s\n", GlobalConfig.TargetRootPath)
+	//fmt.Printf("===> GCTL_TEMPLATES_ROOT_DIR=%s\n", GlobalConfig.TemplatesBaseDir)
+	//fmt.Printf("===> GCTL_TARGET_ROOT_PATH=%s\n", GlobalConfig.TargetBaseDir)
 	//fmt.Printf("===> GCTL_MODULE_PREFIX=%s\n", GlobalConfig.GoModulePrefix)
 	//fmt.Printf("===> GCTL_ONCE_FILES=%#v\n", GlobalConfig.OnceFiles)
 	//fmt.Printf("===> GCTL_PROTO_PATHS=%s\n", GlobalConfig.AllProtoPathList)

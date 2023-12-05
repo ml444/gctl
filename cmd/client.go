@@ -22,41 +22,37 @@ import (
 	"github.com/ml444/gctl/parser"
 )
 
+func init() {
+	clientCmd.Flags().StringVarP(&protoPath, "proto", "p", "", "the filepath of proto")
+	clientCmd.Flags().BoolVarP(&needGenGrpcPb, "grpc", "", true, "generate grpc pb file")
+	clientCmd.Flags().StringVarP(&serviceGroup, "service-group", "g", "", "a group of service, example: base|sys|biz...")
+}
+
 var clientCmd = &cobra.Command{
 	Use:     "client",
 	Short:   "Generate client lib",
 	Aliases: []string{"c"},
 	Run: func(cmd *cobra.Command, args []string) {
-
-		if protoPath == "" && len(args) == 0 {
-			log.Error("You must provide the file of proto: gctl client -p=<protoFilepath> or gctl client <NAME>")
+		var err error
+		err = CheckAndInit(&protoPath, args, &serviceGroup)
+		if err != nil {
+			log.Error(err)
 			return
-		}
-		if serviceGroup == "" && config.GlobalConfig.DefaultSvcGroup != "" {
-			serviceGroup = config.GlobalConfig.DefaultSvcGroup
-		}
-		baseDir := config.GlobalConfig.TargetRootPath
-		if protoPath == "" {
-			protoPath = args[0]
-			//protoPath = filepath.Join(baseDir, config.GlobalConfig.GoModulePrefix, fmt.Sprintf("%s.proto", arg))
 		}
 		protoPath = config.GetTargetProtoAbsPath(serviceGroup, protoPath)
 		tmpDir := config.GetTempClientAbsDir()
-		onceFiles := config.GlobalConfig.OnceFiles
-		log.Debug("root location of code generation: ", baseDir)
 		log.Debug("template path of code generation: ", tmpDir)
-		log.Debug("files that are executed only once during initialization:", onceFiles)
+		onceFiles := config.GlobalConfig.OnceFiles
 		onceFileMap := map[string]bool{}
 		for _, fileName := range onceFiles {
 			onceFileMap[fileName] = true
 		}
-		var err error
 		pd, err := parser.ParseProtoFile(protoPath)
 		if err != nil {
 			log.Errorf("err: %v", err)
 			return
 		}
-		serviceName := getServiceName(protoPath)
+		serviceName := getProtoName(protoPath)
 		if config.GlobalConfig.EnableAssignErrcode {
 			var moduleId int
 			svcAssign := util.NewSvcAssign(serviceName, serviceGroup)
@@ -67,7 +63,6 @@ var clientCmd = &cobra.Command{
 			}
 			pd.ModuleId = moduleId
 		}
-		protoTempPath := config.GetTempProtoAbsPath()
 		var clientRootDir string
 		if pkgPath := pd.Options["go_package"]; pkgPath != "" {
 			if strings.Contains(pkgPath, ";") {
@@ -84,10 +79,6 @@ var clientCmd = &cobra.Command{
 			}
 			if info.IsDir() {
 				log.Warnf("skipping dir: %+v \n", info.Name())
-				return nil
-			}
-			if path == protoTempPath {
-				log.Debugf("skipping proto file: %+v \n", path)
 				return nil
 			}
 			fileName := strings.TrimSuffix(info.Name(), config.GetTempFilesFormatSuffix())
@@ -115,6 +106,11 @@ var clientCmd = &cobra.Command{
 			if ok := checkProtoc(); !ok {
 				return
 			}
+			baseDir := config.GlobalConfig.TargetBaseDir
+			if len(pd.Options["go_package"]) == 0 {
+				baseDir = clientRootDir
+			}
+			log.Debug("root location of code generation: ", baseDir)
 			log.Info("generating protobuf file")
 			err = GenerateProtobuf(pd, baseDir, needGenGrpcPb)
 			if err != nil {
@@ -147,11 +143,6 @@ var clientCmd = &cobra.Command{
 			util.CmdExec("cd " + absPath + " && go fmt ./...")
 		}
 	},
-}
-
-func getServiceName(protoPath string) string {
-	_, fname := filepath.Split(protoPath)
-	return strings.TrimSuffix(fname, ".proto")
 }
 
 func checkProtoc() bool {

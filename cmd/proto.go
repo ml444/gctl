@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"strings"
+	"fmt"
 
 	"github.com/ml444/gctl/config"
 	"github.com/ml444/gctl/util"
@@ -12,36 +12,33 @@ import (
 	"github.com/ml444/gctl/parser"
 )
 
+func init() {
+	protoCmd.Flags().StringVarP(&protoPath, "name", "n", "", "The name of proto")
+	protoCmd.Flags().StringVarP(&serviceGroup, "group", "g", "", "a group of service, example: base|sys|biz...")
+}
+
 var protoCmd = &cobra.Command{
 	Use:     "proto",
 	Short:   "init proto file",
 	Aliases: []string{"p"},
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
-		if protoName == "" && len(args) == 0 {
-			log.Error("proto name must be provided")
-			return
-		}
-		err = config.InitTmplFilesConf()
+		err = CheckAndInit(&protoPath, args, &serviceGroup)
 		if err != nil {
-			log.Errorf("err: %v", err)
+			log.Error(err)
 			return
 		}
-		if !validate(protoName) {
-			return
-		}
-		if serviceGroup == "" {
-			serviceGroup = config.GlobalConfig.DefaultSvcGroup
-		}
-		//modulePrefix := config.JoinModulePrefixWithGroup(serviceGroup)
-		targetFilepath := config.GetTargetProtoAbsPath(serviceGroup, protoName)
+		fmt.Println(protoPath)
+		targetFilepath := config.GetTargetProtoAbsPath(serviceGroup, protoPath)
 		if util.IsFileExist(targetFilepath) {
 			log.Errorf("%s is existed", targetFilepath)
 			return
 		}
+		protoName := getProtoName(protoPath)
 		pd := parser.ParseData{
-			PackageName:  protoName,
-			ModulePrefix: config.JoinModulePrefixWithGroup(serviceGroup),
+			PackageName: protoName,
+			GoPackage:   config.GetGoPackage(serviceGroup, protoPath),
+			//ModulePrefix: config.JoinModulePrefixWithGroup(serviceGroup),
 		}
 
 		var firstErrcode = 1
@@ -74,12 +71,4 @@ var protoCmd = &cobra.Command{
 		}
 		log.Info("generate proto file success: ", targetFilepath)
 	},
-}
-
-func validate(name string) bool {
-	if strings.Contains(name, "-") {
-		log.Error("prohibited use of '-'")
-		return false
-	}
-	return true
 }

@@ -1,7 +1,10 @@
 package cmd
 
 import (
+	"errors"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/ml444/glog/level"
@@ -18,21 +21,14 @@ var (
 
 	needGenGrpcPb bool
 	serviceGroup  string
-	protoName     string
 	protoPath     string
 )
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "If you want to se the debug logs, or print all environment variables.")
-	protoCmd.Flags().StringVarP(&protoName, "name", "n", "", "The name of proto")
-	protoCmd.Flags().StringVarP(&serviceGroup, "service-group", "g", "", "a group of service, example: base|sys|biz...")
 
-	clientCmd.Flags().StringVarP(&protoPath, "proto", "p", "", "The filepath of proto")
-	clientCmd.Flags().BoolVarP(&needGenGrpcPb, "grpc", "", true, "Select whether to generate xxx_grpc.pb file")
-	clientCmd.Flags().StringVarP(&serviceGroup, "service-group", "g", "", "a group of service, example: base|sys|biz...")
-
-	serverCmd.Flags().StringVarP(&protoPath, "proto", "p", "", "The filepath of proto")
-	serverCmd.Flags().StringVarP(&serviceGroup, "service-group", "g", "", "a group of service, example: base|sys|biz...")
+	//serverCmd.Flags().StringVarP(&protoPath, "proto", "p", "", "The filepath of proto")
+	//serverCmd.Flags().StringVarP(&serviceGroup, "service-group", "g", "", "a group of service, example: base|sys|biz...")
 }
 
 var rootCmd = &cobra.Command{
@@ -73,4 +69,32 @@ func Execute() {
 		os.Exit(1)
 	}
 	time.Sleep(time.Millisecond * 100)
+}
+
+func CheckAndInit(protoPath *string, args []string, serviceGroup *string) error {
+	var err error
+	if protoPath == nil || *protoPath == "" {
+		if len(args) == 0 {
+			return errors.New("proto name must be provided")
+		}
+		*protoPath = strings.TrimSpace(args[0])
+	}
+
+	if strings.Contains(*protoPath, "-") {
+		return errors.New("prohibited use of '-'")
+	}
+	err = config.InitTmplFilesConf()
+	if err != nil {
+		log.Errorf("err: %v", err)
+		return err
+	}
+
+	if serviceGroup == nil {
+		*serviceGroup = config.GlobalConfig.DefaultSvcGroup
+	}
+	return nil
+}
+func getProtoName(protoPath string) string {
+	_, fname := filepath.Split(protoPath)
+	return strings.TrimSuffix(fname, ".proto")
 }

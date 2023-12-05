@@ -2,18 +2,25 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/ml444/gctl/config"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/ml444/gctl/config"
+
 	"github.com/ml444/gctl/util"
 
-	"github.com/ml444/gctl/parser"
 	log "github.com/ml444/glog"
 	"github.com/spf13/cobra"
+
+	"github.com/ml444/gctl/parser"
 )
+
+func init() {
+	serverCmd.Flags().StringVarP(&protoPath, "proto", "p", "", "The file of proto")
+	serverCmd.Flags().StringVarP(&serviceGroup, "group", "g", "", "a group of service, example: base|sys|biz...")
+}
 
 var serverCmd = &cobra.Command{
 	Use:     "server",
@@ -21,20 +28,15 @@ var serverCmd = &cobra.Command{
 	Aliases: []string{"s"},
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
-		if protoPath == "" && len(args) == 0 {
-			log.Error("You must provide the file of proto: gctl server -p=<protoFilepath> or gctl server <NAME>")
+		err = CheckAndInit(&protoPath, args, &serviceGroup)
+		if err != nil {
+			log.Error(err)
 			return
 		}
-		if protoPath == "" {
-			protoPath = args[0]
-		}
-		if serviceGroup == "" && config.GlobalConfig.DefaultSvcGroup != "" {
-			serviceGroup = config.GlobalConfig.DefaultSvcGroup
-		}
 
-		serviceName := getServiceName(protoPath)
+		serviceName := getProtoName(protoPath)
 		protoPath = config.GetTargetProtoAbsPath(serviceGroup, protoPath)
-		//baseDir := config.GlobalConfig.TargetRootPath
+		//baseDir := config.GlobalConfig.TargetBaseDir
 		onceFiles := config.GlobalConfig.OnceFiles
 		onceFileMap := map[string]bool{}
 		for _, fileName := range onceFiles {
