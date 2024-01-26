@@ -7,33 +7,27 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ml444/gctl/config"
-
-	"github.com/ml444/gctl/util"
-
-	log "github.com/ml444/glog"
+	"github.com/ml444/gkit/log"
 	"github.com/spf13/cobra"
 
+	"github.com/ml444/gctl/config"
 	"github.com/ml444/gctl/parser"
+	"github.com/ml444/gctl/util"
 )
 
 func init() {
-	serverCmd.Flags().StringVarP(&protoPath, "proto", "p", "", "The file of proto")
-	serverCmd.Flags().StringVarP(&projectGroup, "group", "g", "", "a group of service, example: base|sys|biz...")
+	projectCmd.Flags().StringVarP(&projectName, "name", "n", "", "The name of proto")
+	projectCmd.Flags().StringVarP(&projectGroup, "group", "g", "", "a group of service, example: base|sys|biz...")
 }
 
-var serverCmd = &cobra.Command{
-	Use:     "server",
-	Short:   "Generate server lib",
-	Aliases: []string{"s"},
+var projectName string
+
+var projectCmd = &cobra.Command{
+	Use:     "project",
+	Short:   "Generate project files by template",
+	Aliases: []string{"p"},
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
-		err = RequiredParams(&protoPath, args, &projectGroup)
-		if err != nil {
-			log.Error(err)
-			return
-		}
-
 		tmplCfg, err := config.GetTmplFilesConf()
 		if err != nil {
 			log.Errorf("err: %v", err)
@@ -54,30 +48,14 @@ var serverCmd = &cobra.Command{
 			return
 		}
 		pd.ModulePrefix = config.JoinModulePrefixWithGroup(projectGroup)
-		if config.GlobalConfig.EnableAssignPort {
-			var port int
-			svcAssign := util.NewSvcAssign(serviceName, projectGroup)
-			err = svcAssign.GetOrAssignPortAndErrcode(&port, nil)
-			if err != nil {
-				log.Error(err)
-				return
-			}
-			if port != 0 {
-				var ports []int
-				for i := 0; i < config.GlobalConfig.SvcPortInterval; i++ {
-					ports = append(ports, port+i)
-				}
-				pd.Ports = ports
-			}
-		}
+
 		clientTempDir := tmplCfg.ClientTmplAbsDir()
 		protoTempPath := tmplCfg.ProtoTmplAbsPath()
-		serverTempDir := tmplCfg.ServerTmplAbsDir()
-		// serverRootDir := filepath.Join(baseDir, fmt.Sprintf("%sServer", strings.Split(pd.Options["go_package"], ";")[0]))
-		serverRootDir := tmplCfg.ServerTargetAbsDir(projectGroup, serviceName)
-		log.Debug("server root dir:", serverRootDir)
-		log.Debug("template root dir:", serverTempDir)
-		err = filepath.Walk(serverTempDir, func(path string, info fs.FileInfo, err error) error {
+		projectTempDir := tmplCfg.ProjectTmplAbsDir()
+		projectRootDir := tmplCfg.ProjectTargetAbsDir(projectGroup, serviceName)
+		log.Debug("project dir:", projectRootDir)
+		log.Debug("template project dir:", projectTempDir)
+		err = filepath.Walk(projectTempDir, func(path string, info fs.FileInfo, err error) error {
 			if err != nil {
 				log.Errorf("prevent panic by handling failure accessing a path %q: %v\n", path, err)
 				return err
@@ -98,10 +76,10 @@ var serverCmd = &cobra.Command{
 			}
 
 			fileName := strings.TrimSuffix(info.Name(), tmplCfg.TempFileExtSuffix())
-			parentPath := strings.TrimSuffix(strings.TrimPrefix(path, serverTempDir), info.Name())
-			targetFile := serverRootDir + parentPath + fileName
+			parentPath := strings.TrimSuffix(strings.TrimPrefix(path, projectTempDir), info.Name())
+			targetFile := projectRootDir + parentPath + fileName
 			if util.IsFileExist(targetFile) && onceFileMap[fileName] {
-				log.Printf("[%s] file is exist in this directory, skip it", targetFile)
+				log.Warnf("[%s] file is exist in this directory, skip it", targetFile)
 				return nil
 			}
 
@@ -113,13 +91,13 @@ var serverCmd = &cobra.Command{
 			return nil
 		})
 		if err != nil {
-			fmt.Printf("error walking the path %q: %v\n", serverTempDir, err)
+			fmt.Printf("error walking the path %q: %v\n", projectTempDir, err)
 			return
 		}
 
 		// go mod tidy && go fmt
 		{
-			util.CmdExec("cd " + serverRootDir + " && go mod tidy && go fmt ./...")
+			util.CmdExec("cd " + projectRootDir + " && go mod tidy && go fmt ./...")
 		}
 	},
 }

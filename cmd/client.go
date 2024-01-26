@@ -25,7 +25,7 @@ import (
 func init() {
 	clientCmd.Flags().StringVarP(&protoPath, "proto", "p", "", "the filepath of proto")
 	clientCmd.Flags().BoolVarP(&needGenGrpcPb, "grpc", "", true, "generate grpc pb file")
-	clientCmd.Flags().StringVarP(&serviceGroup, "service-group", "g", "", "a group of service, example: base|sys|biz...")
+	clientCmd.Flags().StringVarP(&projectGroup, "service-group", "g", "", "a group of service, example: base|sys|biz...")
 }
 
 var clientCmd = &cobra.Command{
@@ -34,13 +34,18 @@ var clientCmd = &cobra.Command{
 	Aliases: []string{"c"},
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
-		err = CheckAndInit(&protoPath, args, &serviceGroup)
+		err = RequiredParams(&protoPath, args, &projectGroup)
 		if err != nil {
 			log.Error(err)
 			return
 		}
-		protoPath = config.GetTargetProtoAbsPath(serviceGroup, protoPath)
-		tmpDir := config.GetTempClientAbsDir()
+		tmplCfg, err := config.GetTmplFilesConf()
+		if err != nil {
+			log.Errorf("err: %v", err)
+			return
+		}
+		protoPath = tmplCfg.ProtoTargetAbsPath(projectGroup, protoPath)
+		tmpDir := tmplCfg.ClientTmplAbsDir()
 		log.Debug("template path of code generation: ", tmpDir)
 		onceFiles := config.GlobalConfig.OnceFiles
 		onceFileMap := map[string]bool{}
@@ -55,7 +60,7 @@ var clientCmd = &cobra.Command{
 		serviceName := getProtoName(protoPath)
 		if config.GlobalConfig.EnableAssignErrcode {
 			var moduleId int
-			svcAssign := util.NewSvcAssign(serviceName, serviceGroup)
+			svcAssign := util.NewSvcAssign(serviceName, projectGroup)
 			moduleId, err = svcAssign.GetModuleId()
 			if err != nil {
 				log.Error(err)
@@ -68,9 +73,9 @@ var clientCmd = &cobra.Command{
 			if strings.Contains(pkgPath, ";") {
 				pkgPath = strings.Split(pkgPath, ";")[0]
 			}
-			clientRootDir = config.GetTargetClientAbsDir0(pkgPath)
+			clientRootDir = tmplCfg.ClientTargetAbsDir0(pkgPath)
 		} else {
-			clientRootDir = config.GetTargetClientAbsDir(serviceGroup, serviceName)
+			clientRootDir = tmplCfg.ClientTargetAbsDir(projectGroup, serviceName)
 		}
 		err = filepath.Walk(tmpDir, func(path string, info fs.FileInfo, err error) error {
 			if err != nil {
@@ -81,7 +86,7 @@ var clientCmd = &cobra.Command{
 				log.Warnf("skipping dir: %+v \n", info.Name())
 				return nil
 			}
-			fileName := strings.TrimSuffix(info.Name(), config.GetTempFilesFormatSuffix())
+			fileName := strings.TrimSuffix(info.Name(), tmplCfg.TempFileExtSuffix())
 			parentPath := strings.TrimRight(strings.TrimPrefix(path, tmpDir), info.Name())
 			targetFile := clientRootDir + parentPath + fileName
 			if util.IsFileExist(targetFile) && onceFileMap[fileName] {
@@ -112,7 +117,7 @@ var clientCmd = &cobra.Command{
 			}
 			log.Debug("root location of code generation: ", baseDir)
 			log.Info("generating protobuf file")
-			err = GenerateProtobuf(pd, baseDir, needGenGrpcPb)
+			err = GeneratePbFiles(pd, baseDir, needGenGrpcPb)
 			if err != nil {
 				log.Error(err)
 				return
@@ -126,16 +131,16 @@ var clientCmd = &cobra.Command{
 		}
 
 		// inject tag
-		{
-			pbFilepath := filepath.Join(absPath, fmt.Sprintf("%s.pb.go", pd.PackageName))
-			areas, err := parser.ParsePbFile(pbFilepath, nil, nil)
-			if err != nil {
-				log.Fatal(err)
-			}
-			if err = parser.WritePbFile(pbFilepath, areas, false); err != nil {
-				log.Fatal(err)
-			}
-		}
+		//{
+		//	pbFilepath := filepath.Join(absPath, fmt.Sprintf("%s.pb.go", pd.PackageName))
+		//	areas, err := parser.ParsePbFile(pbFilepath, nil, nil)
+		//	if err != nil {
+		//		log.Fatal(err)
+		//	}
+		//	if err = parser.WritePbFile(pbFilepath, areas, false); err != nil {
+		//		log.Fatal(err)
+		//	}
+		//}
 
 		// go mod tidy && go fmt
 		if osx.IsFileExist(filepath.Join(absPath, "go.mod")) {
@@ -154,29 +159,32 @@ func checkProtoc() bool {
 	}
 	return true
 }
-func GenerateProtobuf(pd *parser.ParseData, basePath string, needGenGrpcPb bool) error {
+func GeneratePbFiles(pd *parser.ParseData, basePath string, needGenGrpcPb bool) error {
 	var err error
 	var args []string
 	var protocName string
-	var protoGenGoName string
+	//var protoGenGoName string
 	switch runtime.GOOS {
 	case "windows":
 		protocName = "protoc.exe"
-		protoGenGoName = "protoc-gen-go.exe"
+		//protoGenGoName = "protoc-gen-go.exe"
 	default:
 		protocName = "protoc"
-		protoGenGoName = "protoc-gen-go"
+		//protoGenGoName = "protoc-gen-go"
 	}
 	goPath := os.Getenv("GOPATH")
 	if goPath == "" {
 		goPath = build.Default.GOPATH
 	}
-	protoGenGoPath := filepath.ToSlash(filepath.Join(goPath, "bin", protoGenGoName))
-	args = append(args, fmt.Sprintf("--plugin=protoc-gen-go=%s", protoGenGoPath))
+	//protoGenGoPath := filepath.ToSlash(filepath.Join(goPath, "bin", protoGenGoName))
+	//args = append(args, fmt.Sprintf("--plugin=protoc-gen-go=%s", protoGenGoPath))
 	args = append(args, fmt.Sprintf("--go_out=%s", filepath.ToSlash(basePath)))
 	args = append(args, fmt.Sprintf("--go-http_out=%s", filepath.ToSlash(basePath)))
-	args = append(args, fmt.Sprintf("--validate_out=lang=go:%s", filepath.ToSlash(basePath)))
-	args = append(args, fmt.Sprintf("--openapi_out=%s", filepath.ToSlash(basePath)))
+	args = append(args, fmt.Sprintf("--go-gorm_out=%s", filepath.ToSlash(basePath)))
+	args = append(args, fmt.Sprintf("--go-errcode_out=%s", filepath.ToSlash(basePath)))
+	args = append(args, fmt.Sprintf("--go-validate_out=%s", filepath.ToSlash(basePath)))
+	//args = append(args, fmt.Sprintf("--openapi_out=%s", filepath.ToSlash(basePath)))
+	args = append(args, "--openapi_out=paths=relative_source:.")
 	if needGenGrpcPb {
 		args = append(args, fmt.Sprintf("--go-grpc_out=%s", filepath.ToSlash(basePath)))
 	}

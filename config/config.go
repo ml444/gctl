@@ -8,7 +8,6 @@ import (
 
 	"github.com/ml444/gkit/config"
 	"github.com/ml444/gkit/config/yaml"
-	"github.com/ml444/gkit/log"
 	"github.com/ml444/gutil/osx"
 )
 
@@ -35,25 +34,6 @@ type Config struct {
 
 	TemplatesBaseDir string          `yaml:"TemplatesBaseDir" env:"name=GCTL_TEMPLATES_BASE_DIR"`
 	TemplatesConf    *TemplateConfig `yaml:"TemplatesConf"`
-}
-
-type TemplateConfig struct {
-	Target struct {
-		RelativeDir struct {
-			Proto  []string `yaml:"proto"`
-			Client []string `yaml:"client"`
-			Server []string `yaml:"server"`
-		} `yaml:"relativeDir"`
-	} `yaml:"target"`
-	Template struct {
-		FilesFormatSuffix string `yaml:"filesFormatSuffix"`
-		ProtoFilename     string `yaml:"protoFilename"`
-		RelativeDir       struct {
-			Proto  []string `yaml:"proto"`
-			Client []string `yaml:"client"`
-			Server []string `yaml:"server"`
-		} `yaml:"relativeDir"`
-	} `yaml:"template"`
 }
 
 func InitConfig() error {
@@ -89,17 +69,6 @@ func InitGlobalVar() error {
 		}
 	}
 
-	//GlobalConfig.DbURI = viper.GetString(KeyDbDSN)
-	//GlobalConfig.EnableAssignPort = viper.GetBool(KeyEnableAssignPort)
-	//GlobalConfig.EnableAssignErrcode = viper.GetBool(KeyEnableAssignErrcode)
-	//GlobalConfig.SvcGroupInitPortMap = viper.GetStringMap(KeySvcGroupInitPortMap)
-	//GlobalConfig.SvcGroupInitErrcodeMap = viper.GetStringMap(KeySvcGroupInitErrcodeMap)
-	//GlobalConfig.SvcPortInterval = viper.GetInt(KeySvcPortInterval)
-	//GlobalConfig.SvcErrcodeInterval = viper.GetInt(KeySvcErrcodeInterval)
-	//GlobalConfig.DefaultSvcGroup = viper.GetString(KeyDefaultServiceGroup)
-
-	//GlobalConfig.ProtoCentralRepoPath = viper.GetString(KeyProtoCentralRepoPath)
-	//GlobalConfig.AllProtoPathList = viper.GetStringSlice(KeyThirdPartyProtoPath)
 	if GlobalConfig.ProtoCentralRepoPath != "" {
 		GlobalConfig.AllProtoPathList = append(GlobalConfig.AllProtoPathList, GlobalConfig.ProtoCentralRepoPath)
 	}
@@ -128,13 +97,6 @@ func InitGlobalVar() error {
 	//		GlobalConfig.AllProtoPathList = append(GlobalConfig.AllProtoPathList, filepath.Join(baseDir, defaultTemplatesName, "protofiles"))
 	//	}
 	//}
-	if GlobalConfig.TemplatesBaseDir != "" {
-		err = InitTmplFilesConf()
-		if err != nil {
-			log.Errorf("err: %v", err)
-			return err
-		}
-	}
 
 	//GlobalConfig.GoModulePrefix = viper.GetString(KeyModulePrefix)
 	//if GlobalConfig.GoModulePrefix == "" {
@@ -149,8 +111,6 @@ func PrintImportantVars() {
 	_ = cfg.Walk(func(key string, value *config.Value) error {
 		if value.EnvName() != "" {
 			fmt.Printf("===> %s=%v\n", value.EnvName(), value.Value())
-		} else {
-			fmt.Printf("===> %s=%v\n", key, value)
 		}
 		return nil
 	})

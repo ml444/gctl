@@ -14,7 +14,7 @@ import (
 
 func init() {
 	protoCmd.Flags().StringVarP(&protoPath, "name", "n", "", "The name of proto")
-	protoCmd.Flags().StringVarP(&serviceGroup, "group", "g", "", "a group of service, example: base|sys|biz...")
+	protoCmd.Flags().StringVarP(&projectGroup, "group", "g", "", "a group of service, example: base|sys|biz...")
 }
 
 var protoCmd = &cobra.Command{
@@ -23,13 +23,19 @@ var protoCmd = &cobra.Command{
 	Aliases: []string{"p"},
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
-		err = CheckAndInit(&protoPath, args, &serviceGroup)
+		err = RequiredParams(&protoPath, args, &projectGroup)
 		if err != nil {
 			log.Error(err)
 			return
 		}
+		tmplCfg, err := config.GetTmplFilesConf()
+		if err != nil {
+			log.Errorf("err: %v", err)
+			return
+		}
+
 		fmt.Println(protoPath)
-		targetFilepath := config.GetTargetProtoAbsPath(serviceGroup, protoPath)
+		targetFilepath := tmplCfg.ProtoTargetAbsPath(projectGroup, protoPath)
 		if util.IsFileExist(targetFilepath) {
 			log.Errorf("%s is existed", targetFilepath)
 			return
@@ -37,8 +43,8 @@ var protoCmd = &cobra.Command{
 		protoName := getProtoName(protoPath)
 		pd := parser.ParseData{
 			PackageName: protoName,
-			GoPackage:   config.GetGoPackage(serviceGroup, protoPath),
-			//ModulePrefix: config.JoinModulePrefixWithGroup(serviceGroup),
+			GoPackage:   tmplCfg.JoinGoPackage(projectGroup, protoPath),
+			//ModulePrefix: config.JoinModulePrefixWithGroup(projectGroup),
 		}
 
 		var firstErrcode = 1
@@ -46,7 +52,7 @@ var protoCmd = &cobra.Command{
 		if config.GlobalConfig.EnableAssignErrcode {
 			var err error
 			var errCode int
-			svcAssign := util.NewSvcAssign(protoName, serviceGroup)
+			svcAssign := util.NewSvcAssign(protoName, projectGroup)
 			err = svcAssign.GetOrAssignPortAndErrcode(nil, &errCode)
 			if err != nil {
 				log.Error(err)
@@ -62,7 +68,7 @@ var protoCmd = &cobra.Command{
 
 		err = parser.GenerateTemplate(
 			targetFilepath,
-			config.GetTempProtoAbsPath(),
+			tmplCfg.ProtoTmplAbsPath(),
 			pd,
 		)
 		if err != nil {

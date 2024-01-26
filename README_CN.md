@@ -8,7 +8,10 @@
 ```shell
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-	go install github.com/envoyproxy/protoc-gen-validate@latest
+	go install github.com/ml444/gkit/cmd/protoc-gen-go-validate@latest
+	go install github.com/ml444/gkit/cmd/protoc-gen-go-http@latest
+	go install github.com/ml444/gkit/cmd/protoc-gen-go-gorm@latest
+	go install github.com/ml444/gkit/cmd/protoc-gen-go-errcode@latest
 	go install github.com/ml444/gctl@latest
 ```
 

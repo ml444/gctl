@@ -24,3 +24,4 @@ go.sum
 gctl
 misc/
 templates/
+pkg/
