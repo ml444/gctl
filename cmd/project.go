@@ -28,14 +28,18 @@ var projectCmd = &cobra.Command{
 	Aliases: []string{"p"},
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
+		err = RequiredParams(&projectName, args, &projectGroup)
+		if err != nil {
+			log.Error(err)
+			return
+		}
 		tmplCfg, err := config.GetTmplFilesConf()
 		if err != nil {
 			log.Errorf("err: %v", err)
 			return
 		}
 
-		serviceName := getProtoName(protoPath)
-		protoPath = tmplCfg.ProtoTargetAbsPath(projectGroup, protoPath)
+		protoPath := tmplCfg.ProtoTargetAbsPath(projectGroup, projectName)
 		//baseDir := config.GlobalConfig.TargetBaseDir
 		onceFiles := config.GlobalConfig.OnceFiles
 		onceFileMap := map[string]bool{}
@@ -48,11 +52,12 @@ var projectCmd = &cobra.Command{
 			return
 		}
 		pd.ModulePrefix = config.JoinModulePrefixWithGroup(projectGroup)
+		pd.GoModule = pd.ModulePrefix + "/" + projectName
 
 		clientTempDir := tmplCfg.ClientTmplAbsDir()
 		protoTempPath := tmplCfg.ProtoTmplAbsPath()
 		projectTempDir := tmplCfg.ProjectTmplAbsDir()
-		projectRootDir := tmplCfg.ProjectTargetAbsDir(projectGroup, serviceName)
+		projectRootDir := tmplCfg.ProjectTargetAbsDir(projectGroup, projectName)
 		log.Debug("project dir:", projectRootDir)
 		log.Debug("template project dir:", projectTempDir)
 		err = filepath.Walk(projectTempDir, func(path string, info fs.FileInfo, err error) error {
@@ -72,6 +77,9 @@ var projectCmd = &cobra.Command{
 				log.Debugf("skipping client file: %+v \n", path)
 				return nil
 			} else {
+				if util.IsDirExist(dir) {
+					return nil
+				}
 				log.Infof("generating dir: %+v \n", dir)
 			}
 

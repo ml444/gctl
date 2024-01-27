@@ -18,7 +18,7 @@ import (
 )
 
 func init() {
-	serverCmd.Flags().StringVarP(&protoPath, "proto", "p", "", "The file of proto")
+	serverCmd.Flags().StringVarP(&name, "proto", "p", "", "The file of proto")
 	serverCmd.Flags().StringVarP(&projectGroup, "group", "g", "", "a group of service, example: base|sys|biz...")
 }
 
@@ -28,7 +28,7 @@ var serverCmd = &cobra.Command{
 	Aliases: []string{"s"},
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
-		err = RequiredParams(&protoPath, args, &projectGroup)
+		err = RequiredParams(&name, args, &projectGroup)
 		if err != nil {
 			log.Error(err)
 			return
@@ -40,15 +40,15 @@ var serverCmd = &cobra.Command{
 			return
 		}
 
-		serviceName := getProtoName(protoPath)
-		protoPath = tmplCfg.ProtoTargetAbsPath(projectGroup, protoPath)
+		serviceName := getProtoName(name)
+		name = tmplCfg.ProtoTargetAbsPath(projectGroup, name)
 		//baseDir := config.GlobalConfig.TargetBaseDir
 		onceFiles := config.GlobalConfig.OnceFiles
 		onceFileMap := map[string]bool{}
 		for _, fileName := range onceFiles {
 			onceFileMap[fileName] = true
 		}
-		pd, err := parser.ParseProtoFile(protoPath)
+		pd, err := parser.ParseProtoFile(name)
 		if err != nil {
 			log.Errorf("err: %v", err)
 			return

@@ -8,12 +8,12 @@ import (
 
 	"github.com/ml444/gkit/config"
 	"github.com/ml444/gkit/config/yaml"
-	"github.com/ml444/gutil/osx"
+	"github.com/ml444/gkit/log"
 )
 
 const gctlConfigFileName = ".gctl_config.yaml"
 
-var GlobalConfig Config
+var GlobalConfig = Config{}
 var cfg *config.Config
 
 type Config struct {
@@ -38,35 +38,37 @@ type Config struct {
 
 func InitConfig() error {
 	var err error
-	cfg, err = config.InitConfig(
-		&GlobalConfig,
-		config.WithFileLoader(yaml.NewLoader()),
-		config.WithFilePath(filepath.Join(GetHomeDir(), gctlConfigFileName)),
-	)
+	if cfgPath := filepath.Join(GetHomeDir(), gctlConfigFileName); IsFileExist(cfgPath) {
+		cfg, err = config.InitConfig(
+			&GlobalConfig,
+			config.WithFileLoader(yaml.NewLoader()),
+			config.WithFilePath(filepath.Join(GetHomeDir(), gctlConfigFileName)),
+		)
+	} else {
+		cfg, err = config.InitConfig(&GlobalConfig)
+	}
 	if err != nil {
-		return err
+		log.Warnf("init config err: %v", err)
+		return nil
 	}
 	return nil
 }
-
+func IsFileExist(name string) bool {
+	fileInfo, err := os.Stat(name)
+	if err != nil {
+		return os.IsExist(err)
+	}
+	if fileInfo != nil && fileInfo.IsDir() {
+		fmt.Printf("This path '%v' is not a file path.", name)
+		return false
+	}
+	return true
+}
 func InitGlobalVar() error {
 	var err error
 	err = InitConfig()
 	if err != nil {
 		return err
-	}
-
-	// read config file
-	confPath := filepath.Join(GetHomeDir(), gctlConfigFileName)
-	if osx.IsFileExist(confPath) {
-		_, err = config.InitConfig(
-			&GlobalConfig,
-			config.WithFileLoader(yaml.NewLoader()),
-			config.WithFilePath(filepath.Join(GetHomeDir(), gctlConfigFileName)),
-		)
-		if err != nil {
-			return err
-		}
 	}
 
 	if GlobalConfig.ProtoCentralRepoPath != "" {

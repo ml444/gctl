@@ -18,7 +18,7 @@ var (
 
 	needGenGrpcPb bool
 	projectGroup  string
-	protoPath     string
+	name          string
 )
 
 func init() {

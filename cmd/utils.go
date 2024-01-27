@@ -8,20 +8,20 @@ import (
 	"github.com/ml444/gctl/config"
 )
 
-func RequiredParams(protoPath *string, args []string, serviceGroup *string) error {
-	if protoPath == nil || *protoPath == "" {
+func RequiredParams(name *string, args []string, projectGroup *string) error {
+	if name == nil || *name == "" {
 		if len(args) == 0 {
 			return errors.New("proto name must be provided")
 		}
-		*protoPath = strings.TrimSpace(args[0])
+		*name = strings.TrimSpace(args[0])
 	}
 
-	if strings.Contains(*protoPath, "-") {
+	if strings.Contains(*name, "-") {
 		return errors.New("prohibited use of '-'")
 	}
 
-	if serviceGroup == nil {
-		*serviceGroup = config.GlobalConfig.DefaultSvcGroup
+	if projectGroup == nil {
+		*projectGroup = config.GlobalConfig.DefaultSvcGroup
 	}
 
 	return nil

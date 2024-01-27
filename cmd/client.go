@@ -23,7 +23,7 @@ import (
 )
 
 func init() {
-	clientCmd.Flags().StringVarP(&protoPath, "proto", "p", "", "the filepath of proto")
+	clientCmd.Flags().StringVarP(&name, "proto", "p", "", "the filepath of proto")
 	clientCmd.Flags().BoolVarP(&needGenGrpcPb, "grpc", "", true, "generate grpc pb file")
 	clientCmd.Flags().StringVarP(&projectGroup, "service-group", "g", "", "a group of service, example: base|sys|biz...")
 }
@@ -34,7 +34,7 @@ var clientCmd = &cobra.Command{
 	Aliases: []string{"c"},
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
-		err = RequiredParams(&protoPath, args, &projectGroup)
+		err = RequiredParams(&name, args, &projectGroup)
 		if err != nil {
 			log.Error(err)
 			return
@@ -44,7 +44,7 @@ var clientCmd = &cobra.Command{
 			log.Errorf("err: %v", err)
 			return
 		}
-		protoPath = tmplCfg.ProtoTargetAbsPath(projectGroup, protoPath)
+		name = tmplCfg.ProtoTargetAbsPath(projectGroup, name)
 		tmpDir := tmplCfg.ClientTmplAbsDir()
 		log.Debug("template path of code generation: ", tmpDir)
 		onceFiles := config.GlobalConfig.OnceFiles
@@ -52,12 +52,12 @@ var clientCmd = &cobra.Command{
 		for _, fileName := range onceFiles {
 			onceFileMap[fileName] = true
 		}
-		pd, err := parser.ParseProtoFile(protoPath)
+		pd, err := parser.ParseProtoFile(name)
 		if err != nil {
 			log.Errorf("err: %v", err)
 			return
 		}
-		serviceName := getProtoName(protoPath)
+		serviceName := getProtoName(name)
 		if config.GlobalConfig.EnableAssignErrcode {
 			var moduleId int
 			svcAssign := util.NewSvcAssign(serviceName, projectGroup)

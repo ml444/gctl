@@ -13,7 +13,7 @@ import (
 )
 
 func init() {
-	protoCmd.Flags().StringVarP(&protoPath, "name", "n", "", "The name of proto")
+	protoCmd.Flags().StringVarP(&name, "name", "n", "", "The name of proto")
 	protoCmd.Flags().StringVarP(&projectGroup, "group", "g", "", "a group of service, example: base|sys|biz...")
 }
 
@@ -23,7 +23,7 @@ var protoCmd = &cobra.Command{
 	Aliases: []string{"p"},
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
-		err = RequiredParams(&protoPath, args, &projectGroup)
+		err = RequiredParams(&name, args, &projectGroup)
 		if err != nil {
 			log.Error(err)
 			return
@@ -34,16 +34,16 @@ var protoCmd = &cobra.Command{
 			return
 		}
 
-		fmt.Println(protoPath)
-		targetFilepath := tmplCfg.ProtoTargetAbsPath(projectGroup, protoPath)
+		fmt.Println(name)
+		targetFilepath := tmplCfg.ProtoTargetAbsPath(projectGroup, name)
 		if util.IsFileExist(targetFilepath) {
 			log.Errorf("%s is existed", targetFilepath)
 			return
 		}
-		protoName := getProtoName(protoPath)
+		protoName := getProtoName(name)
 		pd := parser.ParseData{
 			PackageName: protoName,
-			GoPackage:   tmplCfg.JoinGoPackage(projectGroup, protoPath),
+			GoPackage:   tmplCfg.JoinGoPackage(projectGroup, name),
 			//ModulePrefix: config.JoinModulePrefixWithGroup(projectGroup),
 		}
 

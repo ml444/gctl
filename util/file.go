@@ -29,3 +29,13 @@ func IsFileExist(name string) bool {
 	}
 	return true
 }
+func IsDirExist(name string) bool {
+	fileInfo, err := os.Stat(name)
+	if err != nil {
+		return os.IsExist(err)
+	}
+	if fileInfo != nil && !fileInfo.IsDir() {
+		return false
+	}
+	return true
+}
