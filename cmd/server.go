@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"io/fs"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -70,8 +69,8 @@ var serverCmd = &cobra.Command{
 				pd.Ports = ports
 			}
 		}
-		clientTempDir := tmplCfg.ClientTmplAbsDir()
-		protoTempPath := tmplCfg.ProtoTmplAbsPath()
+		//clientTempDir := tmplCfg.ClientTmplAbsDir()
+		//protoTempPath := tmplCfg.ProtoTmplAbsPath()
 		serverTempDir := tmplCfg.ServerTmplAbsDir()
 		// serverRootDir := filepath.Join(baseDir, fmt.Sprintf("%sServer", strings.Split(pd.Options["go_package"], ";")[0]))
 		serverRootDir := tmplCfg.ServerTargetAbsDir(projectGroup, serviceName)
@@ -85,16 +84,6 @@ var serverCmd = &cobra.Command{
 			if info.IsDir() {
 				log.Debugf("skipping a dir without errors: %+v \n", info.Name())
 				return nil
-			}
-			if path == protoTempPath {
-				log.Debugf("skipping proto file: %+v \n", path)
-				return nil
-			}
-			if dir, _ := filepath.Split(path); strings.TrimSuffix(dir, string(os.PathSeparator)) == clientTempDir {
-				log.Debugf("skipping client file: %+v \n", path)
-				return nil
-			} else {
-				log.Infof("generating dir: %+v \n", dir)
 			}
 
 			fileName := strings.TrimSuffix(info.Name(), tmplCfg.TempFileExtSuffix())

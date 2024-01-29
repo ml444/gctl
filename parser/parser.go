@@ -16,6 +16,7 @@ type ParseData struct {
 	ModuleId     int
 	ModulePrefix string
 	GoModule     string
+	Name         string
 
 	// from proto file
 	FilePath         string

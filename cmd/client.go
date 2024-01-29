@@ -184,7 +184,7 @@ func GeneratePbFiles(pd *parser.ParseData, basePath string, needGenGrpcPb bool) 
 	args = append(args, fmt.Sprintf("--go-errcode_out=%s", filepath.ToSlash(basePath)))
 	args = append(args, fmt.Sprintf("--go-validate_out=%s", filepath.ToSlash(basePath)))
 	//args = append(args, fmt.Sprintf("--openapi_out=%s", filepath.ToSlash(basePath)))
-	args = append(args, "--openapi_out=paths=relative_source:.")
+	//args = append(args, "--openapi_out=paths=relative_source:.")
 	if needGenGrpcPb {
 		args = append(args, fmt.Sprintf("--go-grpc_out=%s", filepath.ToSlash(basePath)))
 	}

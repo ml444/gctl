@@ -38,7 +38,7 @@ type TemplateConfig struct {
 
 // var TmplFilesConf TemplateConfig
 func GetTmplFilesConf() (*TemplateConfig, error) {
-	if GlobalConfig.TemplatesConf == nil {
+	if GlobalConfig.TemplatesConf.Template.ProtoFilename == "" {
 		tcfg := &TemplateConfig{}
 		err := tcfg.Init()
 		if err != nil {
@@ -233,7 +233,10 @@ func (tmplCfg *TemplateConfig) ProjectTargetAbsDir(serviceGroup string, projectN
 	if GlobalConfig.TargetBaseDir == "" {
 		GlobalConfig.TargetBaseDir, _ = os.Getwd()
 	}
-	elems = append(elems, GlobalConfig.TargetBaseDir, GlobalConfig.GoModulePrefix, serviceGroup, projectName)
+	elems = append(elems, GlobalConfig.TargetBaseDir, GlobalConfig.GoModulePrefix, serviceGroup)
+	if !strings.HasSuffix(GlobalConfig.TargetBaseDir, "/"+projectName) {
+		elems = append(elems, projectName)
+	}
 	return filepath.Join(elems...)
 }
 

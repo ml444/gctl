@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"io/fs"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -39,73 +38,72 @@ var projectCmd = &cobra.Command{
 			return
 		}
 
-		protoPath := tmplCfg.ProtoTargetAbsPath(projectGroup, projectName)
+		//protoPath := tmplCfg.ProtoTargetAbsPath(projectGroup, projectName)
 		//baseDir := config.GlobalConfig.TargetBaseDir
-		onceFiles := config.GlobalConfig.OnceFiles
-		onceFileMap := map[string]bool{}
-		for _, fileName := range onceFiles {
-			onceFileMap[fileName] = true
-		}
-		pd, err := parser.ParseProtoFile(protoPath)
-		if err != nil {
-			log.Errorf("err: %v", err)
-			return
-		}
+		//onceFiles := config.GlobalConfig.OnceFiles
+		//onceFileMap := map[string]bool{}
+		//for _, fileName := range onceFiles {
+		//	onceFileMap[fileName] = true
+		//}
+		//pd, err := parser.ParseProtoFile(protoPath)
+		//if err != nil {
+		//	log.Errorf("err: %v", err)
+		//	return
+		//}
+		pd := parser.NewParseData()
+		pd.Name = projectName
 		pd.ModulePrefix = config.JoinModulePrefixWithGroup(projectGroup)
-		pd.GoModule = pd.ModulePrefix + "/" + projectName
+		pd.GoModule = projectName
+		if projectPathPrefix := config.JoinModulePrefixWithGroup(projectGroup); projectPathPrefix != "" {
+			pd.GoModule = strings.Join([]string{config.JoinModulePrefixWithGroup(projectGroup), projectName}, "/")
+		}
 
-		clientTempDir := tmplCfg.ClientTmplAbsDir()
-		protoTempPath := tmplCfg.ProtoTmplAbsPath()
 		projectTempDir := tmplCfg.ProjectTmplAbsDir()
 		projectRootDir := tmplCfg.ProjectTargetAbsDir(projectGroup, projectName)
 		log.Debug("project dir:", projectRootDir)
 		log.Debug("template project dir:", projectTempDir)
+		var genFileDescList [][2]string
 		err = filepath.Walk(projectTempDir, func(path string, info fs.FileInfo, err error) error {
 			if err != nil {
 				log.Errorf("prevent panic by handling failure accessing a path %q: %v\n", path, err)
 				return err
 			}
+
 			if info.IsDir() {
-				log.Debugf("skipping a dir without errors: %+v \n", info.Name())
-				return nil
-			}
-			if path == protoTempPath {
-				log.Debugf("skipping proto file: %+v \n", path)
-				return nil
-			}
-			if dir, _ := filepath.Split(path); strings.TrimSuffix(dir, string(os.PathSeparator)) == clientTempDir {
-				log.Debugf("skipping client file: %+v \n", path)
-				return nil
-			} else {
-				if util.IsDirExist(dir) {
-					return nil
+				// if it is existed, don't generate the dir and files in it
+				relativeDir := strings.TrimPrefix(path, projectTempDir)
+				if relativeDir != "" && util.IsDirExist(projectRootDir+relativeDir) {
+					return fmt.Errorf("%s is existed", projectRootDir+relativeDir)
 				}
-				log.Infof("generating dir: %+v \n", dir)
+				return nil
 			}
 
 			fileName := strings.TrimSuffix(info.Name(), tmplCfg.TempFileExtSuffix())
 			parentPath := strings.TrimSuffix(strings.TrimPrefix(path, projectTempDir), info.Name())
 			targetFile := projectRootDir + parentPath + fileName
-			if util.IsFileExist(targetFile) && onceFileMap[fileName] {
-				log.Warnf("[%s] file is exist in this directory, skip it", targetFile)
+			if util.IsFileExist(targetFile) {
+				log.Warnf("file is existed, skip it: %q \n", targetFile)
 				return nil
 			}
-
-			log.Infof("generating file: %s", targetFile)
-			err = parser.GenerateTemplate(targetFile, path, pd)
-			if err != nil {
-				return err
-			}
+			genFileDescList = append(genFileDescList, [2]string{targetFile, path})
 			return nil
 		})
 		if err != nil {
-			fmt.Printf("error walking the path %q: %v\n", projectTempDir, err)
+			log.Errorf("walking error: %v\n", err)
 			return
+		}
+		for _, v := range genFileDescList {
+			log.Infof("generating file: %s\n", v[0])
+			err = parser.GenerateTemplate(v[0], v[1], pd)
+			if err != nil {
+				log.Errorf("err: %v", err)
+				return
+			}
 		}
 
 		// go mod tidy && go fmt
 		{
-			util.CmdExec("cd " + projectRootDir + " && go mod tidy && go fmt ./...")
+			//util.CmdExec("cd " + projectRootDir + " && go mod tidy && go fmt ./...")
 		}
 	},
 }
