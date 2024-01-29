@@ -41,7 +41,7 @@ var protoCmd = &cobra.Command{
 			return
 		}
 		protoName := getProtoName(name)
-		pd := parser.ParseData{
+		pd := parser.CtxData{
 			PackageName: protoName,
 			GoPackage:   tmplCfg.JoinGoPackage(projectGroup, name),
 			//ModulePrefix: config.JoinModulePrefixWithGroup(projectGroup),

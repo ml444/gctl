@@ -6,17 +6,22 @@ import (
 	"strings"
 
 	"github.com/emicklei/proto"
+
+	"github.com/ml444/gctl/config"
 )
 
-type ParseData struct {
+type CtxData struct {
+	Cfg          *config.Config
+	Command      string
 	GoVersion    string
+	ProjectGroup string
 	Ports        []int
 	StartErrCode int
 	EndErrCode   int
-	ModuleId     int
-	ModulePrefix string
-	GoModule     string
-	Name         string
+	ModuleID     int
+	// ModulePrefix string
+	// GoModule string
+	Name string
 
 	// from proto file
 	FilePath         string
@@ -82,18 +87,18 @@ type ListReqOption struct {
 	EnumFieldMap map[string]string
 }
 
-func NewParseData() *ParseData {
+func NewCtxData() *CtxData {
 	v := strings.TrimPrefix(runtime.Version(), "go")
 	vList := strings.Split(v, ".")
 	if len(vList) >= 3 {
 		v = strings.Join(vList[:2], ".")
 	}
-	return &ParseData{
+	return &CtxData{
 		GoVersion: v,
 	}
 }
 
-func (pd *ParseData) GetFirstGoPackage() (string, error) {
+func (pd *CtxData) GetFirstGoPackage() (string, error) {
 	list := strings.Split(pd.Options["go_package"], ";")
 	if len(list) == 0 {
 		return "", errors.New("no go_package in proto file")

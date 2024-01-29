@@ -40,19 +40,20 @@ var serverCmd = &cobra.Command{
 		}
 
 		serviceName := getProtoName(name)
-		name = tmplCfg.ProtoTargetAbsPath(projectGroup, name)
+		protoPath := tmplCfg.ProtoTargetAbsPath(projectGroup, name)
 		//baseDir := config.GlobalConfig.TargetBaseDir
 		onceFiles := config.GlobalConfig.OnceFiles
 		onceFileMap := map[string]bool{}
 		for _, fileName := range onceFiles {
 			onceFileMap[fileName] = true
 		}
-		pd, err := parser.ParseProtoFile(name)
+		ctx, err := parser.ParseProtoFile(protoPath)
 		if err != nil {
 			log.Errorf("err: %v", err)
 			return
 		}
-		pd.ModulePrefix = config.JoinModulePrefixWithGroup(projectGroup)
+		ctx.Command = "server"
+		ctx.Cfg = &config.GlobalConfig
 		if config.GlobalConfig.EnableAssignPort {
 			var port int
 			svcAssign := util.NewSvcAssign(serviceName, projectGroup)
@@ -66,7 +67,7 @@ var serverCmd = &cobra.Command{
 				for i := 0; i < config.GlobalConfig.SvcPortInterval; i++ {
 					ports = append(ports, port+i)
 				}
-				pd.Ports = ports
+				ctx.Ports = ports
 			}
 		}
 		//clientTempDir := tmplCfg.ClientTmplAbsDir()
@@ -95,7 +96,7 @@ var serverCmd = &cobra.Command{
 			}
 
 			log.Infof("generating file: %s", targetFile)
-			err = parser.GenerateTemplate(targetFile, path, pd)
+			err = parser.GenerateTemplate(targetFile, path, ctx)
 			if err != nil {
 				return err
 			}

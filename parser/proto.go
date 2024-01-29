@@ -10,7 +10,7 @@ import (
 )
 
 // ParseProtoFile 解析proto文件
-func ParseProtoFile(protoFilepath string) (*ParseData, error) {
+func ParseProtoFile(protoFilepath string) (*CtxData, error) {
 	reader, err := os.Open(protoFilepath)
 	if err != nil {
 		log.Errorf("err: %v", err)
@@ -29,17 +29,17 @@ func ParseProtoFile(protoFilepath string) (*ParseData, error) {
 		log.Errorf("err: %v", err)
 		return nil, err
 	}
-	protoData := NewParseData()
-	protoData.FilePath = protoFilepath
+	ctxData := NewCtxData()
+	ctxData.FilePath = protoFilepath
 	handlePackage := func(p *proto.Package) {
-		protoData.PackageName = p.Name
+		ctxData.PackageName = p.Name
 	}
 
 	handleOptions := func(o *proto.Option) {
-		if protoData.Options == nil {
-			protoData.Options = make(map[string]string)
+		if ctxData.Options == nil {
+			ctxData.Options = make(map[string]string)
 		}
-		protoData.Options[o.Name] = o.Constant.Source
+		ctxData.Options[o.Name] = o.Constant.Source
 	}
 
 	handleService := func(s *proto.Service) {
@@ -48,7 +48,7 @@ func ParseProtoFile(protoFilepath string) (*ParseData, error) {
 			//RpcList:     nil,
 		}
 
-		protoData.ServiceList = append(protoData.ServiceList, svc)
+		ctxData.ServiceList = append(ctxData.ServiceList, svc)
 		log.Info("===> serviceName:", s.Name)
 	}
 
@@ -68,7 +68,7 @@ func ParseProtoFile(protoFilepath string) (*ParseData, error) {
 
 		parent := &ProtoVisitor{}
 		m.Parent.Accept(parent)
-		for _, svc := range protoData.ServiceList {
+		for _, svc := range ctxData.ServiceList {
 			if parent.Name == svc.ServiceName {
 				svc.RpcList = append(svc.RpcList, method)
 			}
@@ -82,12 +82,12 @@ func ParseProtoFile(protoFilepath string) (*ParseData, error) {
 			for _, ei := range e.Elements {
 				ei.Accept(&enum)
 			}
-			protoData.ErrCodeList = append(
-				protoData.ErrCodeList,
+			ctxData.ErrCodeList = append(
+				ctxData.ErrCodeList,
 				Enum{Name: e.Name, EnumFieldList: enum.EnumFieldList})
 		} else if strings.HasPrefix(e.Name, "ListOpt") {
-			if protoData.ListOptionMap == nil {
-				protoData.ListOptionMap = map[string]*ListReqOption{}
+			if ctxData.ListOptionMap == nil {
+				ctxData.ListOptionMap = map[string]*ListReqOption{}
 			}
 			msg := Message{}
 			vv := &ProtoVisitor{Message: &msg}
@@ -125,26 +125,26 @@ func ParseProtoFile(protoFilepath string) (*ParseData, error) {
 				if len(fieldMap) > 0 {
 					listReqOpt.EnumFieldMap = fieldMap
 				}
-				if protoData.ListOptionMap == nil {
-					protoData.ListOptionMap = map[string]*ListReqOption{
+				if ctxData.ListOptionMap == nil {
+					ctxData.ListOptionMap = map[string]*ListReqOption{
 						reqName: &listReqOpt,
 					}
 				} else {
-					protoData.ListOptionMap[reqName] = &listReqOpt
+					ctxData.ListOptionMap[reqName] = &listReqOpt
 				}
 			}
 		}
 	}
 
 	handleImport := func(i *proto.Import) {
-		if protoData.ImportMap == nil {
-			protoData.ImportMap = make(map[string]bool)
+		if ctxData.ImportMap == nil {
+			ctxData.ImportMap = make(map[string]bool)
 		}
-		if protoData.ImportMap[i.Filename] {
+		if ctxData.ImportMap[i.Filename] {
 			return
 		}
 		defer func() {
-			protoData.ImportMap[i.Filename] = true
+			ctxData.ImportMap[i.Filename] = true
 		}()
 
 		if strings.HasPrefix(i.Filename, "google/") {
@@ -160,8 +160,8 @@ func ParseProtoFile(protoFilepath string) (*ParseData, error) {
 		}
 
 		if strings.HasPrefix(m.Name, "Model") {
-			protoData.ModelList = append(protoData.ModelList, m)
-			protoData.ModelFieldList = append(protoData.ModelFieldList, vv.FieldNameList...)
+			ctxData.ModelList = append(ctxData.ModelList, m)
+			ctxData.ModelFieldList = append(ctxData.ModelFieldList, vv.FieldNameList...)
 		}
 	}
 
@@ -175,14 +175,14 @@ func ParseProtoFile(protoFilepath string) (*ParseData, error) {
 		proto.WithMessage(handleMessage))
 
 	// Make sure packageName is not empty
-	if protoData.PackageName == "" {
-		_, filename := filepath.Split(protoData.FilePath)
-		protoData.PackageName = strings.TrimSuffix(filename, ".proto")
+	if ctxData.PackageName == "" {
+		_, filename := filepath.Split(ctxData.FilePath)
+		ctxData.PackageName = strings.TrimSuffix(filename, ".proto")
 	}
 
 	// unique ModelFieldList
-	protoData.ModelFieldList = ToUnique(protoData.ModelFieldList)
-	return protoData, nil
+	ctxData.ModelFieldList = ToUnique(ctxData.ModelFieldList)
+	return ctxData, nil
 }
 
 func ToUnique(list []string) []string {

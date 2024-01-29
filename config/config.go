@@ -29,7 +29,7 @@ type Config struct {
 	DefaultSvcGroup      string   `yaml:"DefaultSvcGroup" env:"name=GCTL_DEFAULT_SVC_GROUP"`
 	GoModulePrefix       string   `yaml:"GoModulePrefix" env:"name=GCTL_MODULE_PREFIX"`
 	OnceFiles            []string `yaml:"OnceFiles" env:"name=GCTL_ONCE_FILES;default=.gitignore,go.mod,.editorconfig,README.md,Dockerfile,Makefile"`
-	AllProtoPathList     []string `yaml:"ProtoPaths" env:"name=GCTL_PROTO_PATHS"`
+	ProtoPaths           []string `yaml:"ProtoPaths" env:"name=GCTL_PROTO_PATHS"`
 	ProtoCentralRepoPath string   `yaml:"ProtoCentralRepoPath" env:"name=GCTL_PROTO_CENTRAL_REPO_PATH"`
 
 	TemplatesBaseDir string          `yaml:"TemplatesBaseDir" env:"name=GCTL_TEMPLATES_BASE_DIR"`
@@ -72,7 +72,7 @@ func InitGlobalVar() error {
 	}
 
 	if GlobalConfig.ProtoCentralRepoPath != "" {
-		GlobalConfig.AllProtoPathList = append(GlobalConfig.AllProtoPathList, GlobalConfig.ProtoCentralRepoPath)
+		GlobalConfig.ProtoPaths = append(GlobalConfig.ProtoPaths, GlobalConfig.ProtoCentralRepoPath)
 	}
 	//GlobalConfig.TargetBaseDir = viper.GetString(KeyTargetRootPath)
 	//GlobalConfig.TemplatesBaseDir = viper.GetString(KeyTemplateRootDir)

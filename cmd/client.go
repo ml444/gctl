@@ -3,9 +3,7 @@ package cmd
 import (
 	"bytes"
 	"fmt"
-	"go/build"
 	"io/fs"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -59,14 +57,14 @@ var clientCmd = &cobra.Command{
 		}
 		serviceName := getProtoName(name)
 		if config.GlobalConfig.EnableAssignErrcode {
-			var moduleId int
+			var moduleID int
 			svcAssign := util.NewSvcAssign(serviceName, projectGroup)
-			moduleId, err = svcAssign.GetModuleId()
+			moduleID, err = svcAssign.GetModuleId()
 			if err != nil {
 				log.Error(err)
 				return
 			}
-			pd.ModuleId = moduleId
+			pd.ModuleID = moduleID
 		}
 		var clientRootDir string
 		if pkgPath := pd.Options["go_package"]; pkgPath != "" {
@@ -159,7 +157,7 @@ func checkProtoc() bool {
 	}
 	return true
 }
-func GeneratePbFiles(pd *parser.ParseData, basePath string, needGenGrpcPb bool) error {
+func GeneratePbFiles(pd *parser.CtxData, basePath string, needGenGrpcPb bool) error {
 	var err error
 	var args []string
 	var protocName string
@@ -172,10 +170,10 @@ func GeneratePbFiles(pd *parser.ParseData, basePath string, needGenGrpcPb bool) 
 		protocName = "protoc"
 		//protoGenGoName = "protoc-gen-go"
 	}
-	goPath := os.Getenv("GOPATH")
-	if goPath == "" {
-		goPath = build.Default.GOPATH
-	}
+	// goPath := os.Getenv("GOPATH")
+	// if goPath == "" {
+	// 	goPath = build.Default.GOPATH
+	// }
 	//protoGenGoPath := filepath.ToSlash(filepath.Join(goPath, "bin", protoGenGoName))
 	//args = append(args, fmt.Sprintf("--plugin=protoc-gen-go=%s", protoGenGoPath))
 	args = append(args, fmt.Sprintf("--go_out=%s", filepath.ToSlash(basePath)))
@@ -224,5 +222,5 @@ func GeneratePbFiles(pd *parser.ParseData, basePath string, needGenGrpcPb bool) 
 }
 
 func getIncludePathList() []string {
-	return config.GlobalConfig.AllProtoPathList
+	return config.GlobalConfig.ProtoPaths
 }

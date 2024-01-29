@@ -38,7 +38,7 @@ type TemplateConfig struct {
 
 // var TmplFilesConf TemplateConfig
 func GetTmplFilesConf() (*TemplateConfig, error) {
-	if GlobalConfig.TemplatesConf.Template.ProtoFilename == "" {
+	if GlobalConfig.TemplatesConf == nil || GlobalConfig.TemplatesConf.Template.ProtoFilename == "" {
 		tcfg := &TemplateConfig{}
 		err := tcfg.Init()
 		if err != nil {
@@ -72,7 +72,7 @@ func (tmplCfg *TemplateConfig) Init() error {
 			return err
 		}
 	}
-	if GlobalConfig.TemplatesConf.Template.ProtoFilename == "" {
+	if GlobalConfig.TemplatesConf == nil || GlobalConfig.TemplatesConf.Template.ProtoFilename == "" {
 		tmplConfPath := filepath.Join(GlobalConfig.TemplatesBaseDir, "config.yaml")
 		err = readYaml(tmplConfPath, tmplCfg)
 		if err != nil {

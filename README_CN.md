@@ -49,7 +49,8 @@ TemplatesBaseDir: "/your_path/github.com/ml444/gctl-templates/separation_templat
 TargetBaseDir: "/your/target/root/path"
 ModulePrefix: "my.gitlab.com"
 DefaultSvcGroup: "my_group"
-ProtoPaths: "/your_path/github.com/ml444/gctl-templates/protofiles"
+ProtoPaths: 
+  - "/your_path/github.com/ml444/gctl-templates/protofiles"
 ProtoCentralRepoPath: "/your_path/my.gitlab.com/my_group/proto"
 DbURI: "mysql://user:password@tcp(localhost:3306)/xxx_config"
 EnableAssignPort: false

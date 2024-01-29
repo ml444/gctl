@@ -12,7 +12,7 @@ import (
 )
 
 // ParseGoFile 从一个go文件从找出制定后缀的结构体，然后分析结构体里面的方法函数，并排除私有方法函数。
-func (pd *ParseData) ParseGoFile(filePath string) error {
+func (pd *CtxData) ParseGoFile(filePath string) error {
 	src, err := os.ReadFile(filePath)
 	if err != nil {
 		log.Error(err.Error())
@@ -57,7 +57,7 @@ func (pd *ParseData) ParseGoFile(filePath string) error {
 
 // Parse service.go file: find the structure that specifies the suffix from a go file,
 // analyze the method functions inside the structure, and exclude private method functions.
-func (pd *ParseData) parseServiceMethod(astFile *ast.File) {
+func (pd *CtxData) parseServiceMethod(astFile *ast.File) {
 	var svcMap = make(map[string]map[string]struct {
 		Req string
 		Rsp string

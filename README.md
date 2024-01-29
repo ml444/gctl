@@ -29,10 +29,10 @@ A code generation and checking tool for Go microservices
 ```shell
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-	go install github.com/ml444/gkit/cmd/protoc-gen-go-validate@latest
 	go install github.com/ml444/gkit/cmd/protoc-gen-go-http@latest
 	go install github.com/ml444/gkit/cmd/protoc-gen-go-gorm@latest
 	go install github.com/ml444/gkit/cmd/protoc-gen-go-errcode@latest
+	go install github.com/ml444/gkit/cmd/protoc-gen-go-validate@latest
 	go install github.com/ml444/gctl@latest
 ```
 
@@ -79,7 +79,8 @@ A code generation and checking tool for Go microservices
     TargetBaseDir: "/your/target/root/path"
     ModulePrefix: "my.gitlab.com"
     DefaultServiceGroup: "my_group"
-    ProtoPaths: "/your_path/github.com/ml444/gctl-templates/protofiles"
+    ProtoPaths: 
+      - "/your_path/github.com/ml444/gctl-templates/protofiles"
     ProtoCentralRepoPath: "/your_path/my.gitlab.com/my_group/proto"
     DbURI: "mysql://user:password@tcp(localhost:3306)/xxx_config"
     EnableAssignPort: false

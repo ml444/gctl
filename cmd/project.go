@@ -50,14 +50,9 @@ var projectCmd = &cobra.Command{
 		//	log.Errorf("err: %v", err)
 		//	return
 		//}
-		pd := parser.NewParseData()
+		pd := parser.NewCtxData()
+		pd.Command = "project"
 		pd.Name = projectName
-		pd.ModulePrefix = config.JoinModulePrefixWithGroup(projectGroup)
-		pd.GoModule = projectName
-		if projectPathPrefix := config.JoinModulePrefixWithGroup(projectGroup); projectPathPrefix != "" {
-			pd.GoModule = strings.Join([]string{config.JoinModulePrefixWithGroup(projectGroup), projectName}, "/")
-		}
-
 		projectTempDir := tmplCfg.ProjectTmplAbsDir()
 		projectRootDir := tmplCfg.ProjectTargetAbsDir(projectGroup, projectName)
 		log.Debug("project dir:", projectRootDir)
