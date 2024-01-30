@@ -36,15 +36,23 @@ func GoModule(ctx *CtxData, command string) string {
 		tmplCfg := ctx.Cfg.TemplatesConf
 		// get project name
 		projectName := projectName(ctx)
-		elems := []string{goModulePrefix, projectName}
-		elems = append(elems, tmplCfg.Template.RelativeDir.Server...)
+		var elems []string
+		if goModulePrefix != "" {
+			elems = append(elems, goModulePrefix)
+		}
+		elems = append(elems, projectName)
+		elems = append(elems, tmplCfg.ServerRelativeDirs(ctx.Name)...)
 		return strings.Join(elems, "/")
 	case "client":
 		tmplCfg := ctx.Cfg.TemplatesConf
 		// get project name
 		projectName := projectName(ctx)
-		elems := []string{goModulePrefix, projectName}
-		elems = append(elems, tmplCfg.Template.RelativeDir.Client...)
+		var elems []string
+		if goModulePrefix != "" {
+			elems = append(elems, goModulePrefix)
+		}
+		elems = append(elems, projectName)
+		elems = append(elems, tmplCfg.ClientRelativeDirs(ctx.Name)...)
 		return strings.Join(elems, "/")
 	}
 	if goModulePrefix != "" {
@@ -56,7 +64,7 @@ func GoModule(ctx *CtxData, command string) string {
 func projectName(ctx *CtxData) string {
 	tmplCfg := ctx.Cfg.TemplatesConf
 	targetPath := tmplCfg.ServerTargetAbsDir(ctx.ProjectGroup, ctx.Name)
-	relativeDir := filepath.Join(tmplCfg.Template.RelativeDir.Server...)
+	relativeDir := tmplCfg.ServerRelativePath(ctx.Name)
 	projectPath := strings.TrimRight(strings.TrimSuffix(targetPath, relativeDir), string(filepath.Separator))
 	_, projectName := filepath.Split(projectPath)
 	return projectName

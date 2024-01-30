@@ -30,18 +30,14 @@ var clientCmd = &cobra.Command{
 	Use:     "client",
 	Short:   "Generate client lib",
 	Aliases: []string{"c"},
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		var err error
 		err = RequiredParams(&name, args, &projectGroup)
 		if err != nil {
 			log.Error(err)
 			return
 		}
-		tmplCfg, err := config.GetTmplFilesConf()
-		if err != nil {
-			log.Errorf("err: %v", err)
-			return
-		}
+		tmplCfg := config.GlobalConfig.TemplatesConf
 		name = tmplCfg.ProtoTargetAbsPath(projectGroup, name)
 		tmpDir := tmplCfg.ClientTmplAbsDir()
 		log.Debug("template path of code generation: ", tmpDir)

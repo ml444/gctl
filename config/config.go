@@ -38,6 +38,7 @@ type Config struct {
 
 func InitConfig() error {
 	var err error
+
 	if cfgPath := filepath.Join(GetHomeDir(), gctlConfigFileName); IsFileExist(cfgPath) {
 		cfg, err = config.InitConfig(
 			&GlobalConfig,
@@ -50,6 +51,11 @@ func InitConfig() error {
 	if err != nil {
 		log.Warnf("init config err: %v", err)
 		return nil
+	}
+	_, err = GetTmplFilesConf()
+	if err != nil {
+		log.Errorf("err: %v", err)
+		return err
 	}
 	return nil
 }

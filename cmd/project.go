@@ -25,34 +25,19 @@ var projectCmd = &cobra.Command{
 	Use:     "project",
 	Short:   "Generate project files by template",
 	Aliases: []string{"p"},
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		var err error
 		err = RequiredParams(&projectName, args, &projectGroup)
 		if err != nil {
 			log.Error(err)
 			return
 		}
-		tmplCfg, err := config.GetTmplFilesConf()
-		if err != nil {
-			log.Errorf("err: %v", err)
-			return
-		}
 
-		//protoPath := tmplCfg.ProtoTargetAbsPath(projectGroup, projectName)
-		//baseDir := config.GlobalConfig.TargetBaseDir
-		//onceFiles := config.GlobalConfig.OnceFiles
-		//onceFileMap := map[string]bool{}
-		//for _, fileName := range onceFiles {
-		//	onceFileMap[fileName] = true
-		//}
-		//pd, err := parser.ParseProtoFile(protoPath)
-		//if err != nil {
-		//	log.Errorf("err: %v", err)
-		//	return
-		//}
-		pd := parser.NewCtxData()
-		pd.Command = "project"
-		pd.Name = projectName
+		ctx := parser.NewCtxData()
+		ctx.Command = "project"
+		ctx.Name = projectName
+		ctx.Cfg = &config.GlobalConfig
+		tmplCfg := ctx.Cfg.TemplatesConf
 		projectTempDir := tmplCfg.ProjectTmplAbsDir()
 		projectRootDir := tmplCfg.ProjectTargetAbsDir(projectGroup, projectName)
 		log.Debug("project dir:", projectRootDir)
@@ -89,7 +74,7 @@ var projectCmd = &cobra.Command{
 		}
 		for _, v := range genFileDescList {
 			log.Infof("generating file: %s\n", v[0])
-			err = parser.GenerateTemplate(v[0], v[1], pd)
+			err = parser.GenerateTemplate(v[0], v[1], ctx)
 			if err != nil {
 				log.Errorf("err: %v", err)
 				return

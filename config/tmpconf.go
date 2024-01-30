@@ -216,6 +216,13 @@ func (tmplCfg *TemplateConfig) ClientTargetAbsDir(serviceGroup, serviceName stri
 	}
 	return filepath.Join(elems...)
 }
+func (tmplCfg *TemplateConfig) ClientRelativeDirs(serviceName string) []string {
+	var elems []string
+	for _, el := range tmplCfg.Target.RelativeDir.Client {
+		elems = append(elems, strings.ReplaceAll(el, ServiceNameVar, serviceName))
+	}
+	return elems
+}
 func (tmplCfg *TemplateConfig) ServerTargetAbsDir(serviceGroup, serviceName string) string {
 	var elems []string
 	elems = append(elems, filepath.Join(GlobalConfig.TargetBaseDir, GlobalConfig.GoModulePrefix))
@@ -227,7 +234,21 @@ func (tmplCfg *TemplateConfig) ServerTargetAbsDir(serviceGroup, serviceName stri
 	}
 	return filepath.Join(elems...)
 }
+func (tmplCfg *TemplateConfig) ServerRelativeDirs(serviceName string) []string {
+	var elems []string
+	for _, el := range tmplCfg.Target.RelativeDir.Server {
+		elems = append(elems, strings.ReplaceAll(el, ServiceNameVar, serviceName))
+	}
+	return elems
+}
 
+func (tmplCfg *TemplateConfig) ServerRelativePath(serviceName string) string {
+	var elems []string
+	for _, el := range tmplCfg.Target.RelativeDir.Server {
+		elems = append(elems, strings.ReplaceAll(el, ServiceNameVar, serviceName))
+	}
+	return filepath.Join(elems...)
+}
 func (tmplCfg *TemplateConfig) ProjectTargetAbsDir(serviceGroup string, projectName string) string {
 	var elems []string
 	if GlobalConfig.TargetBaseDir == "" {
@@ -238,12 +259,4 @@ func (tmplCfg *TemplateConfig) ProjectTargetAbsDir(serviceGroup string, projectN
 		elems = append(elems, projectName)
 	}
 	return filepath.Join(elems...)
-}
-
-func JoinModulePrefixWithGroup(serviceGroup string) string {
-	modulePrefix := GlobalConfig.GoModulePrefix
-	if serviceGroup != "" {
-		return filepath.Join(modulePrefix, serviceGroup)
-	}
-	return modulePrefix
 }

@@ -25,7 +25,7 @@ var serverCmd = &cobra.Command{
 	Use:     "server",
 	Short:   "Generate server lib",
 	Aliases: []string{"s"},
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		var err error
 		err = RequiredParams(&name, args, &projectGroup)
 		if err != nil {
@@ -33,13 +33,8 @@ var serverCmd = &cobra.Command{
 			return
 		}
 
-		tmplCfg, err := config.GetTmplFilesConf()
-		if err != nil {
-			log.Errorf("err: %v", err)
-			return
-		}
-
 		serviceName := getProtoName(name)
+		tmplCfg := config.GlobalConfig.TemplatesConf
 		protoPath := tmplCfg.ProtoTargetAbsPath(projectGroup, name)
 		//baseDir := config.GlobalConfig.TargetBaseDir
 		onceFiles := config.GlobalConfig.OnceFiles
@@ -52,6 +47,7 @@ var serverCmd = &cobra.Command{
 			log.Errorf("err: %v", err)
 			return
 		}
+		ctx.Name = serviceName
 		ctx.Command = "server"
 		ctx.Cfg = &config.GlobalConfig
 		if config.GlobalConfig.EnableAssignPort {
