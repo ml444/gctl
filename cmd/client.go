@@ -141,6 +141,7 @@ var clientCmd = &cobra.Command{
 			util.CmdExec("cd " + absPath + " && go mod tidy")
 			util.CmdExec("cd " + absPath + " && go fmt ./...")
 		}
+		util.CmdExec("cd " + absPath + " && goimports -w ./*.pb.go")
 	},
 }
 
