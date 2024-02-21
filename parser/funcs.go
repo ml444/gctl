@@ -25,38 +25,38 @@ var funcMap = template.FuncMap{
 }
 
 func GoModule(ctx *CtxData, command string) string {
-	goModulePrefix := goModulePrefix(ctx)
+	modulePrefix := goModulePrefix(ctx)
 	switch command {
 	case "project":
-		if goModulePrefix != "" {
-			return goModulePrefix + "/" + ctx.Name
+		if modulePrefix != "" {
+			return modulePrefix + "/" + ctx.Name
 		}
-		return ctx.Name
+		return projectName(ctx)
 	case "server":
 		tmplCfg := ctx.Cfg.TemplatesConf
 		// get project name
-		projectName := projectName(ctx)
+		projName := projectName(ctx)
 		var elems []string
-		if goModulePrefix != "" {
-			elems = append(elems, goModulePrefix)
+		if modulePrefix != "" {
+			elems = append(elems, modulePrefix)
 		}
-		elems = append(elems, projectName)
+		elems = append(elems, projName)
 		elems = append(elems, tmplCfg.ServerRelativeDirs(ctx.Name)...)
 		return strings.Join(elems, "/")
 	case "client":
 		tmplCfg := ctx.Cfg.TemplatesConf
 		// get project name
-		projectName := projectName(ctx)
+		projName := projectName(ctx)
 		var elems []string
-		if goModulePrefix != "" {
-			elems = append(elems, goModulePrefix)
+		if modulePrefix != "" {
+			elems = append(elems, modulePrefix)
 		}
-		elems = append(elems, projectName)
+		elems = append(elems, projName)
 		elems = append(elems, tmplCfg.ClientRelativeDirs(ctx.Name)...)
 		return strings.Join(elems, "/")
 	}
-	if goModulePrefix != "" {
-		return goModulePrefix + "/" + ctx.Name
+	if modulePrefix != "" {
+		return modulePrefix + "/" + ctx.Name
 	}
 	return ctx.Name
 }
@@ -66,8 +66,8 @@ func projectName(ctx *CtxData) string {
 	targetPath := tmplCfg.ServerTargetAbsDir(ctx.ProjectGroup, ctx.Name)
 	relativeDir := tmplCfg.ServerRelativePath(ctx.Name)
 	projectPath := strings.TrimRight(strings.TrimSuffix(targetPath, relativeDir), string(filepath.Separator))
-	_, projectName := filepath.Split(projectPath)
-	return projectName
+	_, projName := filepath.Split(projectPath)
+	return projName
 }
 
 func goModulePrefix(ctx *CtxData) string {
