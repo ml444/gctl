@@ -178,8 +178,9 @@ func GeneratePbFiles(pd *parser.CtxData, basePath string, needGenGrpcPb bool) er
 	args = append(args, fmt.Sprintf("--go-gorm_out=%s", filepath.ToSlash(basePath)))
 	args = append(args, fmt.Sprintf("--go-errcode_out=%s", filepath.ToSlash(basePath)))
 	args = append(args, fmt.Sprintf("--go-validate_out=%s", filepath.ToSlash(basePath)))
-	//args = append(args, fmt.Sprintf("--openapi_out=%s", filepath.ToSlash(basePath)))
-	//args = append(args, "--openapi_out=paths=relative_source:.")
+	args = append(args, fmt.Sprintf("--go-field_out=include_prefix=Model:%s", filepath.ToSlash(basePath)))
+	//args = append(args, fmt.Sprintf("--openapi_out=paths=import:%s", filepath.ToSlash(basePath)))
+	//args = append(args, "--openapi_out=paths=source_relative:.")
 	if needGenGrpcPb {
 		args = append(args, fmt.Sprintf("--go-grpc_out=%s", filepath.ToSlash(basePath)))
 	}
