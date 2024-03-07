@@ -20,10 +20,9 @@ func RequiredParams(name *string, args []string, projectGroup *string) error {
 		return errors.New("prohibited use of '-'")
 	}
 
-	if projectGroup == nil {
+	if projectGroup == nil || *projectGroup == "" {
 		*projectGroup = config.GlobalConfig.DefaultSvcGroup
 	}
-
 	return nil
 }
 func getProtoName(protoPath string) string {

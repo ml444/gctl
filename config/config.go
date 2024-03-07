@@ -17,6 +17,7 @@ var GlobalConfig = Config{}
 var cfg *config.Config
 
 type Config struct {
+	Debug                  bool           `yaml:"Debug" env:"name=GCTL_DEBUG"`
 	DbURI                  string         `yaml:"DbURI" env:"name=GCTL_DB_URI"`
 	EnableAssignPort       bool           `yaml:"EnableAssignPort" env:"name=GCTL_ENABLE_ASSIGN_PORT;default=false"`
 	EnableAssignErrcode    bool           `yaml:"EnableAssignErrcode" env:"name=GCTL_ENABLE_ASSIGN_ERRCODE;default=false"`
@@ -26,7 +27,7 @@ type Config struct {
 	SvcGroupInitErrcodeMap map[string]int `yaml:"SvcGroupInitErrcodeMap" env:"name=GCTL_SVC_GROUP_INIT_ERRCODE_MAP"`
 
 	TargetBaseDir        string   `yaml:"TargetBaseDir" env:"name=GCTL_TARGET_BASE_DIR"`
-	DefaultSvcGroup      string   `yaml:"DefaultSvcGroup" env:"name=GCTL_DEFAULT_SVC_GROUP"`
+	DefaultSvcGroup      string   `yaml:"DefaultServiceGroup" env:"name=GCTL_DEFAULT_SVC_GROUP"`
 	GoModulePrefix       string   `yaml:"GoModulePrefix" env:"name=GCTL_MODULE_PREFIX"`
 	OnceFiles            []string `yaml:"OnceFiles" env:"name=GCTL_ONCE_FILES;default=.gitignore,go.mod,.editorconfig,README.md,Dockerfile,Makefile"`
 	ProtoPaths           []string `yaml:"ProtoPaths" env:"name=GCTL_PROTO_PATHS"`

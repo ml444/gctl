@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/ml444/gctl/config"
+	"github.com/ml444/gctl/internal/db"
 	"github.com/ml444/gctl/util"
 
 	"github.com/ml444/gkit/log"
@@ -21,7 +22,7 @@ var protoCmd = &cobra.Command{
 	Use:     "proto",
 	Short:   "init proto file",
 	Aliases: []string{"p"},
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		var err error
 		err = RequiredParams(&name, args, &projectGroup)
 		if err != nil {
@@ -50,9 +51,12 @@ var protoCmd = &cobra.Command{
 		var firstErrcode = 1
 		var endErrCode = 1 << 31
 		if config.GlobalConfig.EnableAssignErrcode {
-			var err error
 			var errCode int
-			svcAssign := util.NewSvcAssign(protoName, projectGroup)
+			svcAssign, err := db.NewSvcAssign(protoName, projectGroup, &config.GlobalConfig)
+			if err != nil {
+				log.Error(err)
+				return
+			}
 			err = svcAssign.GetOrAssignPortAndErrcode(nil, &errCode)
 			if err != nil {
 				log.Error(err)

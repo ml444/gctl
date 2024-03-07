@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/ml444/gctl/config"
+	"github.com/ml444/gctl/internal/db"
 
 	"github.com/ml444/gctl/util"
 
@@ -52,7 +53,11 @@ var serverCmd = &cobra.Command{
 		ctx.Cfg = &config.GlobalConfig
 		if config.GlobalConfig.EnableAssignPort {
 			var port int
-			svcAssign := util.NewSvcAssign(serviceName, projectGroup)
+			svcAssign, err := db.NewSvcAssign(serviceName, projectGroup, &config.GlobalConfig)
+			if err != nil {
+				log.Error(err)
+				return
+			}
 			err = svcAssign.GetOrAssignPortAndErrcode(&port, nil)
 			if err != nil {
 				log.Error(err)

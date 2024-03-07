@@ -1,32 +1,22 @@
-package util
+package db
 
 import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"path"
+	"runtime"
 	"strings"
 
-	"github.com/ml444/gctl/config"
-
-	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 	log "github.com/ml444/glog"
-)
 
-var createTableSQL = `CREATE TABLE IF NOT EXISTS service_init_config  
-				(
-					id int(10) NOT NULL AUTO_INCREMENT, 
-					service_name varchar(50) NOT NULL,
-					service_group varchar(50) NOT NULL, 
-					start_errcode int unsigned NOT NULL, 
-					start_port int unsigned DEFAULT 0, 
-					PRIMARY KEY (id),
-					UNIQUE KEY IDX_service_name (service_name) USING BTREE
-				) ENGINE=INNODB DEFAULT CHARSET = utf8mb4`
+	"github.com/ml444/gctl/config"
+)
 
 type SvcAssign struct {
 	db              *sql.DB
-	DbDSN           string
+	DBURI           string
 	SvcName         string
 	SvcGroup        string
 	PortInterval    int
@@ -35,24 +25,25 @@ type SvcAssign struct {
 	ErrcodeInitMap  map[string]int
 }
 
-func NewSvcAssign(svcName, svcGroup string) *SvcAssign {
+func NewSvcAssign(svcName, svcGroup string, cfg *config.Config) (*SvcAssign, error) {
+	sqlDB, err := getDB(cfg.DbURI)
+	if err != nil {
+		return nil, err
+	}
+
 	return &SvcAssign{
-		db:              nil,
-		DbDSN:           config.GlobalConfig.DbURI,
+		db:              sqlDB,
 		SvcName:         svcName,
 		SvcGroup:        svcGroup,
-		PortInterval:    config.GlobalConfig.SvcPortInterval,
-		ErrcodeInterval: config.GlobalConfig.SvcErrcodeInterval,
-		PortInitMap:     config.GlobalConfig.SvcGroupInitPortMap,
-		ErrcodeInitMap:  config.GlobalConfig.SvcGroupInitErrcodeMap,
-	}
+		DBURI:           cfg.DbURI,
+		PortInterval:    cfg.SvcPortInterval,
+		ErrcodeInterval: cfg.SvcErrcodeInterval,
+		PortInitMap:     cfg.SvcGroupInitPortMap,
+		ErrcodeInitMap:  cfg.SvcGroupInitErrcodeMap,
+	}, nil
 }
 
 func (a *SvcAssign) GetOrAssignPortAndErrcode(port, errCode *int) error {
-	err := a.getDb()
-	if err != nil {
-		return err
-	}
 	defer a.db.Close()
 
 	// Just tools to use, no performance considerations. Splitting the query in two.
@@ -73,53 +64,53 @@ func (a *SvcAssign) GetOrAssignPortAndErrcode(port, errCode *int) error {
 	return nil
 }
 
-func (a *SvcAssign) getDb() error {
-	if a.db != nil {
-		return nil
-	}
-	var err error
-	// postgres://user:password@localhost/mydatabase?sslmode=disable
-	if a.DbDSN == "" {
-		return errors.New(`
-		You must setting the env of 'GCTL_DB_DSN':
-		MySQL: mysql://username:password@tcp(ip:port)/database
-		Postgres: postgres://username:password@ip:port/database
-		`)
-	}
-	sList := strings.Split(a.DbDSN, "://")
-	if len(sList) != 2 {
-		return errors.New(fmt.Sprintf("database DSN format is error: %s", a.DbDSN))
-	}
-	driverName := sList[0]
-	if !(driverName == "mysql" || driverName == "postgres") {
-		return errors.New("you must use one of the following driver names: mysql or postgresql")
-	}
-	// TODO: postgres unprocessed
-	a.db, err = sql.Open(sList[0], sList[1])
-	if err != nil {
-		log.Error(err)
-		return err
-	}
-	err = a.initTable(a.db, driverName)
-	if err != nil {
-		log.Error(err)
-		return err
+func getDB(dbURI string) (db *sql.DB, err error) {
+	var driverName, dataSourceName string
+	if dbURI == "" {
+		_, filename, _, ok := runtime.Caller(0)
+		if !ok {
+			return nil, fmt.Errorf("failed to get current file path")
+		}
+		log.Info(path.Dir(filename))
+		for _, driver := range sql.Drivers() {
+			println(driver)
+		}
+		driverName = "sqlite3"
+		dataSourceName = "./gctl_service.db"
+
+	} else {
+		sList := strings.Split(dbURI, "://")
+		if len(sList) != 2 {
+			return nil, fmt.Errorf("database DSN format is error: %s", dbURI)
+		}
+		driverName = sList[0]
+		dataSourceName = sList[1]
+
 	}
 
-	return nil
+	db, err = sql.Open(driverName, dataSourceName)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+	err = initTable(db, driverName)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	return db, nil
 }
 
-func (a *SvcAssign) initTable(db *sql.DB, dbType string) error {
-	switch dbType {
-	case "mysql":
-		_, err := db.Exec(createTableSQL)
-		if err != nil {
-			log.Error(err)
-			return err
-		}
-	case "postgres", "postgresql":
-		// TODO
-		return nil
+func initTable(db *sql.DB, dbType string) error {
+	createTableSQL := GetCreateTableSQL(dbType)
+	if createTableSQL == "" {
+		return errors.New("not found db type: " + dbType)
+	}
+	_, err := db.Exec(createTableSQL)
+	if err != nil {
+		log.Error(err)
+		return err
 	}
 	return nil
 }
@@ -138,10 +129,10 @@ func (a *SvcAssign) getMaxErrcode() (int, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			startErrcode, ok := a.ErrcodeInitMap[a.SvcGroup]
 			if !ok {
-				return 0, errors.New(fmt.Sprintf("the group[%s] of errcode was not found in the environment variable", a.SvcGroup))
+				return 0, fmt.Errorf("not found the group: '%s' from errcodeMap", a.SvcGroup)
 			}
 
-			maxErrcode = ToInt(startErrcode)
+			maxErrcode = startErrcode
 		} else {
 			log.Error(err)
 			return 0, err
@@ -150,30 +141,22 @@ func (a *SvcAssign) getMaxErrcode() (int, error) {
 	return maxErrcode, nil
 }
 
-func (a *SvcAssign) GetModuleId() (int, error) {
+func (a *SvcAssign) GetModuleID() (int, error) {
 	var err error
-	if a.db == nil {
-		err = a.getDb()
-		if err != nil {
-			return 0, err
-		}
-		defer a.db.Close()
-	}
-
 	row := a.db.QueryRow(`SELECT id FROM service_init_config WHERE service_name=? AND service_group=?`, a.SvcName, a.SvcGroup)
-	if err := row.Err(); err != nil {
+	if err = row.Err(); err != nil {
 		log.Error(a.SvcGroup, a.SvcName)
 		log.Error(err.Error())
 		return 0, err
 	}
-	var moduleId int
-	err = row.Scan(&moduleId)
+	var moduleID int
+	err = row.Scan(&moduleID)
 	if err != nil {
 		log.Error(a.SvcGroup, " ", a.SvcName)
 		log.Error(err)
 		return 0, err
 	}
-	return moduleId, nil
+	return moduleID, nil
 }
 
 func (a *SvcAssign) getErrCode() (int, error) {
@@ -227,8 +210,9 @@ func (a *SvcAssign) getErrCode() (int, error) {
 	}
 
 	var err error
+	var maxErrcode int
 	row := a.db.QueryRow(`SELECT start_errcode FROM service_init_config WHERE service_name=? AND service_group=?`, a.SvcName, a.SvcGroup)
-	if err := row.Err(); err != nil {
+	if err = row.Err(); err != nil {
 		log.Error(err.Error())
 		return 0, err
 	}
@@ -237,7 +221,7 @@ func (a *SvcAssign) getErrCode() (int, error) {
 	if err != nil {
 		// create data
 		if errors.Is(err, sql.ErrNoRows) {
-			maxErrcode, err := a.getMaxErrcode()
+			maxErrcode, err = a.getMaxErrcode()
 			if err != nil {
 				log.Error(err)
 				return 0, err
@@ -248,7 +232,7 @@ func (a *SvcAssign) getErrCode() (int, error) {
 		return 0, err
 	}
 	if errcode == 0 {
-		maxErrcode, err := a.getMaxErrcode()
+		maxErrcode, err = a.getMaxErrcode()
 		if err != nil {
 			log.Error(err)
 			return 0, err
@@ -272,9 +256,9 @@ func (a *SvcAssign) getServerPort() (int, error) {
 			if errors.Is(err, sql.ErrNoRows) {
 				startPort, ok := a.PortInitMap[a.SvcGroup]
 				if !ok {
-					return 0, errors.New(fmt.Sprintf("the group[%s] of port was not found in the environment variable", a.SvcGroup))
+					return 0, fmt.Errorf("not found the group '%s' from portMap", a.SvcGroup)
 				}
-				maxPort = ToInt(startPort)
+				maxPort = startPort
 			} else {
 				log.Error(err)
 				return 0, err

@@ -12,6 +12,7 @@ import (
 	"github.com/ml444/gutil/osx"
 
 	"github.com/ml444/gctl/config"
+	"github.com/ml444/gctl/internal/db"
 	"github.com/ml444/gctl/util"
 
 	log "github.com/ml444/glog"
@@ -54,8 +55,12 @@ var clientCmd = &cobra.Command{
 		serviceName := getProtoName(name)
 		if config.GlobalConfig.EnableAssignErrcode {
 			var moduleID int
-			svcAssign := util.NewSvcAssign(serviceName, projectGroup)
-			moduleID, err = svcAssign.GetModuleId()
+			svcAssign, err := db.NewSvcAssign(serviceName, projectGroup, &config.GlobalConfig)
+			if err != nil {
+				log.Error(err)
+				return
+			}
+			moduleID, err = svcAssign.GetModuleID()
 			if err != nil {
 				log.Error(err)
 				return
