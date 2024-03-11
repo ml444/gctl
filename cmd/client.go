@@ -55,11 +55,12 @@ var clientCmd = &cobra.Command{
 		serviceName := getProtoName(name)
 		if config.GlobalConfig.EnableAssignErrcode {
 			var moduleID int
-			svcAssign, err := db.NewSvcAssign(serviceName, projectGroup, &config.GlobalConfig)
+			svcAssign, err := db.GetDispatcher(serviceName, projectGroup, &config.GlobalConfig)
 			if err != nil {
 				log.Error(err)
 				return
 			}
+			defer svcAssign.Close()
 			moduleID, err = svcAssign.GetModuleID()
 			if err != nil {
 				log.Error(err)

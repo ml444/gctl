@@ -53,11 +53,12 @@ var serverCmd = &cobra.Command{
 		ctx.Cfg = &config.GlobalConfig
 		if config.GlobalConfig.EnableAssignPort {
 			var port int
-			svcAssign, err := db.NewSvcAssign(serviceName, projectGroup, &config.GlobalConfig)
+			svcAssign, err := db.GetDispatcher(serviceName, projectGroup, &config.GlobalConfig)
 			if err != nil {
 				log.Error(err)
 				return
 			}
+			defer svcAssign.Close()
 			err = svcAssign.GetOrAssignPortAndErrcode(&port, nil)
 			if err != nil {
 				log.Error(err)

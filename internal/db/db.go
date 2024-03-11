@@ -2,10 +2,27 @@ package db
 
 import (
 	"errors"
+
+	"github.com/ml444/gctl/config"
 )
 
+type IDispatcher interface {
+	GetOrAssignPortAndErrcode(port, errCode *int) error
+	GetModuleID() (int, error)
+
+	Close()
+}
+
+func GetDispatcher(svcName, svcGroup string, cfg *config.Config) (IDispatcher, error) {
+	if cfg.DBURI == "" {
+		return NewCSVAssign(svcName, svcGroup, cfg)
+	} else {
+		return NewDBAssign(svcName, svcGroup, cfg)
+	}
+}
+
 type ModelServiceConfig struct {
-	Id           uint64 `gorm:"comment:主键;primarykey"`
+	Id           uint32 `gorm:"comment:主键;primarykey"`
 	CreatedAt    uint32 `gorm:"comment:创建时间"`
 	UpdatedAt    uint32 `gorm:"comment:更新时间"`
 	DeletedAt    uint32 `gorm:"comment:删除时间"`

@@ -52,11 +52,13 @@ var protoCmd = &cobra.Command{
 		var endErrCode = 1 << 31
 		if config.GlobalConfig.EnableAssignErrcode {
 			var errCode int
-			svcAssign, err := db.NewSvcAssign(protoName, projectGroup, &config.GlobalConfig)
+			svcAssign, err := db.GetDispatcher(protoName, projectGroup, &config.GlobalConfig)
 			if err != nil {
 				log.Error(err)
 				return
 			}
+			defer svcAssign.Close()
+
 			err = svcAssign.GetOrAssignPortAndErrcode(nil, &errCode)
 			if err != nil {
 				log.Error(err)

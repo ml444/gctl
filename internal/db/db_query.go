@@ -14,8 +14,9 @@ import (
 	"github.com/ml444/gctl/config"
 )
 
-type SvcAssign struct {
+type DBAssign struct {
 	db              *sql.DB
+	cfg             *config.Config
 	DBURI           string
 	SvcName         string
 	SvcGroup        string
@@ -25,17 +26,18 @@ type SvcAssign struct {
 	ErrcodeInitMap  map[string]int
 }
 
-func NewSvcAssign(svcName, svcGroup string, cfg *config.Config) (*SvcAssign, error) {
-	sqlDB, err := getDB(cfg.DbURI)
+func NewDBAssign(svcName, svcGroup string, cfg *config.Config) (IDispatcher, error) {
+	sqlDB, err := getDB(cfg.DBURI)
 	if err != nil {
 		return nil, err
 	}
 
-	return &SvcAssign{
+	return &DBAssign{
 		db:              sqlDB,
+		cfg:             cfg,
 		SvcName:         svcName,
 		SvcGroup:        svcGroup,
-		DBURI:           cfg.DbURI,
+		DBURI:           cfg.DBURI,
 		PortInterval:    cfg.SvcPortInterval,
 		ErrcodeInterval: cfg.SvcErrcodeInterval,
 		PortInitMap:     cfg.SvcGroupInitPortMap,
@@ -43,9 +45,11 @@ func NewSvcAssign(svcName, svcGroup string, cfg *config.Config) (*SvcAssign, err
 	}, nil
 }
 
-func (a *SvcAssign) GetOrAssignPortAndErrcode(port, errCode *int) error {
-	defer a.db.Close()
+func (a *DBAssign) Close() {
+	_ = a.db.Close()
+}
 
+func (a *DBAssign) GetOrAssignPortAndErrcode(port, errCode *int) error {
 	// Just tools to use, no performance considerations. Splitting the query in two.
 	if port != nil {
 		p, err := a.getServerPort()
@@ -115,7 +119,7 @@ func initTable(db *sql.DB, dbType string) error {
 	return nil
 }
 
-func (a *SvcAssign) getMaxErrcode() (int, error) {
+func (a *DBAssign) getMaxErrcode() (int, error) {
 	var err error
 	var maxErrcode int
 	// get max port
@@ -129,7 +133,8 @@ func (a *SvcAssign) getMaxErrcode() (int, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			startErrcode, ok := a.ErrcodeInitMap[a.SvcGroup]
 			if !ok {
-				return 0, fmt.Errorf("not found the group: '%s' from errcodeMap", a.SvcGroup)
+				return a.cfg.DefaultStartingErrcode, nil
+				// return 0, fmt.Errorf("not found the group: '%s' from errcodeMap", a.SvcGroup)
 			}
 
 			maxErrcode = startErrcode
@@ -141,7 +146,7 @@ func (a *SvcAssign) getMaxErrcode() (int, error) {
 	return maxErrcode, nil
 }
 
-func (a *SvcAssign) GetModuleID() (int, error) {
+func (a *DBAssign) GetModuleID() (int, error) {
 	var err error
 	row := a.db.QueryRow(`SELECT id FROM service_init_config WHERE service_name=? AND service_group=?`, a.SvcName, a.SvcGroup)
 	if err = row.Err(); err != nil {
@@ -159,7 +164,7 @@ func (a *SvcAssign) GetModuleID() (int, error) {
 	return moduleID, nil
 }
 
-func (a *SvcAssign) getErrCode() (int, error) {
+func (a *DBAssign) getErrCode() (int, error) {
 	insertNewErrcode := func(maxErrcode int) (int, error) {
 		newErrcode := maxErrcode + a.ErrcodeInterval
 		result, err := a.db.Exec(`INSERT INTO service_init_config (service_name, service_group, start_errcode) VALUES (?, ?, ?)`, a.SvcName, a.SvcGroup, newErrcode)
@@ -241,7 +246,7 @@ func (a *SvcAssign) getErrCode() (int, error) {
 	}
 	return errcode, nil
 }
-func (a *SvcAssign) getServerPort() (int, error) {
+func (a *DBAssign) getServerPort() (int, error) {
 	getMaxPort := func() (int, error) {
 		var err error
 		var maxPort int
@@ -256,7 +261,8 @@ func (a *SvcAssign) getServerPort() (int, error) {
 			if errors.Is(err, sql.ErrNoRows) {
 				startPort, ok := a.PortInitMap[a.SvcGroup]
 				if !ok {
-					return 0, fmt.Errorf("not found the group '%s' from portMap", a.SvcGroup)
+					return a.cfg.DefaultStartingPort, nil
+					// return 0, fmt.Errorf("not found the group '%s' from portMap", a.SvcGroup)
 				}
 				maxPort = startPort
 			} else {

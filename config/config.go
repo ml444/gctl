@@ -18,11 +18,13 @@ var cfg *config.Config
 
 type Config struct {
 	Debug                  bool           `yaml:"Debug" env:"name=GCTL_DEBUG"`
-	DbURI                  string         `yaml:"DbURI" env:"name=GCTL_DB_URI"`
+	DBURI                  string         `yaml:"DbURI" env:"name=GCTL_DB_URI"`
 	EnableAssignPort       bool           `yaml:"EnableAssignPort" env:"name=GCTL_ENABLE_ASSIGN_PORT;default=false"`
 	EnableAssignErrcode    bool           `yaml:"EnableAssignErrcode" env:"name=GCTL_ENABLE_ASSIGN_ERRCODE;default=false"`
 	SvcErrcodeInterval     int            `yaml:"SvcErrcodeInterval" env:"name=GCTL_SVC_ERRCODE_INTERVAL;default=1000"`
 	SvcPortInterval        int            `yaml:"SvcPortInterval" env:"name=GCTL_SVC_PORT_INTERVAL;default=10"`
+	DefaultStartingPort    int            `yaml:"DefaultStartingPort" env:"name=GCTL_DEFAULT_STARTING_PORT;default=10000"`
+	DefaultStartingErrcode int            `yaml:"DefaultStartingErrcode" env:"name=GCTL_DEFAULT_STARTING_ERRCODE;default=100000"`
 	SvcGroupInitPortMap    map[string]int `yaml:"SvcGroupInitPortMap" env:"name=GCTL_SVC_GROUP_INIT_PORT_MAP"`
 	SvcGroupInitErrcodeMap map[string]int `yaml:"SvcGroupInitErrcodeMap" env:"name=GCTL_SVC_GROUP_INIT_ERRCODE_MAP"`
 
