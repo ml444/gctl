@@ -48,6 +48,7 @@ var serverCmd = &cobra.Command{
 			return
 		}
 		ctx.Name = serviceName
+		ctx.Group = projectGroup
 		ctx.Command = "server"
 		ctx.Cfg = &config.GlobalConfig
 		if config.GlobalConfig.EnableAssignPort {

@@ -25,7 +25,7 @@ type CSVAssign struct {
 }
 
 func NewCSVAssign(svcName, svcGroup string, cfg *config.Config) (IDispatcher, error) {
-	file, err := os.OpenFile("gctl_service_cfg.cc", os.O_RDWR|os.O_CREATE, 0664)
+	file, err := os.OpenFile(cfg.CsvFile, os.O_RDWR|os.O_CREATE, 0664)
 	if err != nil {
 		return nil, err
 	}

@@ -17,8 +17,16 @@ var GlobalConfig = Config{}
 var cfg *config.Config
 
 type Config struct {
-	Debug                  bool           `yaml:"Debug" env:"name=GCTL_DEBUG"`
-	DBURI                  string         `yaml:"DbURI" env:"name=GCTL_DB_URI"`
+	Debug bool `yaml:"Debug" env:"name=GCTL_DEBUG"`
+
+	// @desc: Database URI
+	// MySQL: mysql://username:password@tcp(ip:port)/database
+	// Postgres: postgres://username:password@ip:port/database	or "user=astaxie password=astaxie dbname=test sslmode=disable"
+	// SQLite: sqlite://username:password@ip:port/database
+	DBURI string `yaml:"DbURI" env:"name=GCTL_DB_URI"`
+	// @desc: The name of the csv file to store the service port and errcode when the database is not used.
+	CsvFile string `yaml:"CsvFile" env:"name=GCTL_CSV_FILE;default=gctl_service_settings.csv"`
+
 	EnableAssignPort       bool           `yaml:"EnableAssignPort" env:"name=GCTL_ENABLE_ASSIGN_PORT;default=false"`
 	EnableAssignErrcode    bool           `yaml:"EnableAssignErrcode" env:"name=GCTL_ENABLE_ASSIGN_ERRCODE;default=false"`
 	SvcErrcodeInterval     int            `yaml:"SvcErrcodeInterval" env:"name=GCTL_SVC_ERRCODE_INTERVAL;default=1000"`
@@ -45,20 +53,31 @@ func (c *Config) IsRelativePath() bool {
 
 func InitConfig() error {
 	var err error
-
-	if cfgPath := filepath.Join(GetHomeDir(), gctlConfigFileName); IsFileExist(cfgPath) {
-		cfg, err = config.InitConfig(
-			&GlobalConfig,
-			config.WithFileLoader(yaml.NewLoader()),
-			config.WithFilePath(filepath.Join(GetHomeDir(), gctlConfigFileName)),
-		)
-	} else {
-		cfg, err = config.InitConfig(&GlobalConfig)
+	currentDir, _ := os.Getwd()
+	cfgPath := filepath.Join(currentDir, gctlConfigFileName)
+	if !IsFileExist(cfgPath) {
+		cfgPath = filepath.Join(GetHomeDir(), gctlConfigFileName)
+		if !IsFileExist(cfgPath) {
+			cfg, err = config.InitConfig(&GlobalConfig)
+			if err != nil {
+				log.Warnf("init config err: %v", err)
+				return nil
+			}
+			goto InitTemplates
+		}
 	}
+
+	log.Infof("config file: %s \n", cfgPath)
+	cfg, err = config.InitConfig(
+		&GlobalConfig,
+		config.WithFileLoader(yaml.NewLoader()),
+		config.WithFilePath(cfgPath),
+	)
 	if err != nil {
 		log.Warnf("init config err: %v", err)
 		return nil
 	}
+InitTemplates:
 	_, err = GetTmplFilesConf()
 	if err != nil {
 		log.Errorf("err: %v", err)

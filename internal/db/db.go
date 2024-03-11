@@ -60,8 +60,5 @@ type ModelServiceConfig struct {
 
 var initErr = errors.New(`
 		You must setting the env of 'GCTL_DB_DSN':
-		MySQL: mysql://username:password@tcp(ip:port)/database
-		Postgres: postgres://username:password@ip:port/database	or "user=astaxie password=astaxie dbname=test sslmode=disable"
-		SQLite: sqlite://username:password@ip:port/database
 
 		`)

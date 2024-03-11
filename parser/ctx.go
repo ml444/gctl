@@ -11,10 +11,10 @@ import (
 )
 
 type CtxData struct {
-	Cfg          *config.Config
-	Command      string
-	GoVersion    string
-	ProjectGroup string
+	Cfg       *config.Config
+	Command   string
+	GoVersion string
+	//ProjectGroup string
 	Ports        []int
 	StartErrCode int
 	EndErrCode   int

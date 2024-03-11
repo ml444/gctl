@@ -52,6 +52,7 @@ var clientCmd = &cobra.Command{
 			log.Errorf("err: %v", err)
 			return
 		}
+		pd.Group = projectGroup
 		serviceName := getProtoName(name)
 		if config.GlobalConfig.EnableAssignErrcode {
 			var moduleID int

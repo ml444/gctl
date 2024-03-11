@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/ml444/gctl/config"
 	"github.com/ml444/gctl/internal/db"
 	"github.com/ml444/gctl/util"
@@ -35,7 +33,6 @@ var protoCmd = &cobra.Command{
 			return
 		}
 
-		fmt.Println(name)
 		targetFilepath := tmplCfg.ProtoTargetAbsPath(projectGroup, name)
 		if util.IsFileExist(targetFilepath) {
 			log.Errorf("%s is existed", targetFilepath)
@@ -47,6 +44,7 @@ var protoCmd = &cobra.Command{
 			GoPackage:   tmplCfg.JoinGoPackage(projectGroup, name),
 			//ModulePrefix: config.JoinModulePrefixWithGroup(projectGroup),
 		}
+		pd.Group = projectGroup
 
 		var firstErrcode = 1
 		var endErrCode = 1 << 31

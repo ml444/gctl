@@ -64,7 +64,7 @@ func GoModule(ctx *CtxData, command string) string {
 
 func projectName(ctx *CtxData) string {
 	tmplCfg := ctx.Cfg.TemplatesConf
-	targetPath := tmplCfg.ServerTargetAbsPath(ctx.ProjectGroup, ctx.Name)
+	targetPath := tmplCfg.ServerTargetAbsPath(ctx.Group, ctx.Name)
 	relativeDirs := tmplCfg.ServerRelativeDirs(ctx.Group, ctx.Name)
 	projectPath := strings.TrimRight(strings.TrimSuffix(targetPath, filepath.Join(relativeDirs...)), string(filepath.Separator))
 	_, projName := filepath.Split(projectPath)
@@ -74,8 +74,8 @@ func projectName(ctx *CtxData) string {
 func goModulePrefix(ctx *CtxData) string {
 	modulePrefix := ctx.Cfg.GoModulePrefix
 	group := ctx.Cfg.DefaultSvcGroup
-	if ctx.ProjectGroup != "" {
-		group = ctx.ProjectGroup
+	if ctx.Group != "" {
+		group = ctx.Group
 	}
 	if modulePrefix != "" {
 		return modulePrefix + "/" + group
