@@ -12,6 +12,7 @@ var funcMap = template.FuncMap{
 	"Concat":       util.Concat,
 	"TrimSpace":    strings.TrimSpace,
 	"TrimPrefix":   strings.TrimPrefix,
+	"TrimSuffix":   strings.TrimSuffix,
 	"HasPrefix":    strings.HasPrefix,
 	"Contains":     strings.Contains,
 	"ToUpper":      strings.ToUpper,
@@ -41,7 +42,7 @@ func GoModule(ctx *CtxData, command string) string {
 			elems = append(elems, modulePrefix)
 		}
 		elems = append(elems, projName)
-		elems = append(elems, tmplCfg.ServerRelativeDirs(ctx.Name)...)
+		elems = append(elems, tmplCfg.ServerRelativeDirs(ctx.Group, ctx.Name)...)
 		return strings.Join(elems, "/")
 	case "client":
 		tmplCfg := ctx.Cfg.TemplatesConf
@@ -52,7 +53,7 @@ func GoModule(ctx *CtxData, command string) string {
 			elems = append(elems, modulePrefix)
 		}
 		elems = append(elems, projName)
-		elems = append(elems, tmplCfg.ClientRelativeDirs(ctx.Name)...)
+		elems = append(elems, tmplCfg.ClientRelativeDirs(ctx.Group, ctx.Name)...)
 		return strings.Join(elems, "/")
 	}
 	if modulePrefix != "" {
@@ -63,9 +64,9 @@ func GoModule(ctx *CtxData, command string) string {
 
 func projectName(ctx *CtxData) string {
 	tmplCfg := ctx.Cfg.TemplatesConf
-	targetPath := tmplCfg.ServerTargetAbsDir(ctx.ProjectGroup, ctx.Name)
-	relativeDir := tmplCfg.ServerRelativePath(ctx.Name)
-	projectPath := strings.TrimRight(strings.TrimSuffix(targetPath, relativeDir), string(filepath.Separator))
+	targetPath := tmplCfg.ServerTargetAbsPath(ctx.ProjectGroup, ctx.Name)
+	relativeDirs := tmplCfg.ServerRelativeDirs(ctx.Group, ctx.Name)
+	projectPath := strings.TrimRight(strings.TrimSuffix(targetPath, filepath.Join(relativeDirs...)), string(filepath.Separator))
 	_, projName := filepath.Split(projectPath)
 	return projName
 }

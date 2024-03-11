@@ -86,10 +86,8 @@ var clientCmd = &cobra.Command{
 				log.Warnf("skipping dir: %+v \n", info.Name())
 				return nil
 			}
-			fileName := strings.TrimSuffix(info.Name(), tmplCfg.TempFileExtSuffix())
-			parentPath := strings.TrimRight(strings.TrimPrefix(path, tmpDir), info.Name())
-			targetFile := clientRootDir + parentPath + fileName
-			if util.IsFileExist(targetFile) && onceFileMap[fileName] {
+			targetFile := tmplCfg.ProcessFilePath(clientRootDir, path, tmpDir, info.Name())
+			if util.IsFileExist(targetFile) && onceFileMap[tmplCfg.GetFileName(info.Name())] {
 				log.Warnf("[%s] file is exist in this directory, skip it", targetFile)
 				return nil
 			}

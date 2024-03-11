@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/fs"
 	"path/filepath"
-	"strings"
 
 	"github.com/ml444/gctl/config"
 	"github.com/ml444/gctl/internal/db"
@@ -76,7 +75,7 @@ var serverCmd = &cobra.Command{
 		//protoTempPath := tmplCfg.ProtoTmplAbsPath()
 		serverTempDir := tmplCfg.ServerTmplAbsDir()
 		// serverRootDir := filepath.Join(baseDir, fmt.Sprintf("%sServer", strings.Split(pd.Options["go_package"], ";")[0]))
-		serverRootDir := tmplCfg.ServerTargetAbsDir(projectGroup, serviceName)
+		serverRootDir := tmplCfg.ServerTargetAbsPath(projectGroup, serviceName)
 		log.Debug("server root dir:", serverRootDir)
 		log.Debug("template root dir:", serverTempDir)
 		err = filepath.Walk(serverTempDir, func(path string, info fs.FileInfo, err error) error {
@@ -89,10 +88,8 @@ var serverCmd = &cobra.Command{
 				return nil
 			}
 
-			fileName := strings.TrimSuffix(info.Name(), tmplCfg.TempFileExtSuffix())
-			parentPath := strings.TrimSuffix(strings.TrimPrefix(path, serverTempDir), info.Name())
-			targetFile := serverRootDir + parentPath + fileName
-			if util.IsFileExist(targetFile) && onceFileMap[fileName] {
+			targetFile := tmplCfg.ProcessFilePath(serverRootDir, path, serverTempDir, info.Name())
+			if util.IsFileExist(targetFile) && onceFileMap[tmplCfg.GetFileName(info.Name())] {
 				log.Printf("[%s] file is exist in this directory, skip it", targetFile)
 				return nil
 			}

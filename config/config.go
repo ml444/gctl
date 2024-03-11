@@ -39,6 +39,10 @@ type Config struct {
 	TemplatesConf    *TemplateConfig `yaml:"TemplatesConf"`
 }
 
+func (c *Config) IsRelativePath() bool {
+	return c.GoModulePrefix == ""
+}
+
 func InitConfig() error {
 	var err error
 

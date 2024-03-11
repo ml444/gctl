@@ -21,7 +21,8 @@ type CtxData struct {
 	ModuleID     int
 	// ModulePrefix string
 	// GoModule string
-	Name string
+	Name  string
+	Group string
 
 	// from proto file
 	FilePath         string

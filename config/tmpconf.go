@@ -13,6 +13,7 @@ import (
 
 const (
 	ProtoFileSuffix = ".proto"
+	GroupNameVar    = "{GROUP_NAME}"
 	ServiceNameVar  = "{SERVICE_NAME}"
 )
 
@@ -37,6 +38,7 @@ type TemplateConfig struct {
 }
 
 // var TmplFilesConf TemplateConfig
+
 func GetTmplFilesConf() (*TemplateConfig, error) {
 	if GlobalConfig.TemplatesConf == nil || GlobalConfig.TemplatesConf.Template.ProtoFilename == "" {
 		tcfg := &TemplateConfig{}
@@ -125,15 +127,17 @@ func (tmplCfg *TemplateConfig) JoinGoPackage(serviceGroup, protoName string) str
 	var elems []string
 	if GlobalConfig.GoModulePrefix != "" {
 		elems = append(elems, GlobalConfig.GoModulePrefix)
-	}
-	if serviceGroup != "" {
-		elems = append(elems, serviceGroup)
+		if serviceGroup != "" {
+			elems = append(elems, serviceGroup)
+		}
 	}
 	dir, name := filepath.Split(protoName)
 	serviceName := strings.TrimSuffix(name, ProtoFileSuffix)
 	if dir == "" {
 		for _, el := range tmplCfg.Target.RelativeDir.Client {
-			elems = append(elems, strings.ReplaceAll(el, ServiceNameVar, serviceName))
+			el = strings.ReplaceAll(el, GroupNameVar, serviceGroup)
+			el = strings.ReplaceAll(el, ServiceNameVar, serviceName)
+			elems = append(elems, el)
 		}
 	} else if dir != "." {
 		elems = append(elems, strings.Split(dir, "/")...)
@@ -165,6 +169,9 @@ func (tmplCfg *TemplateConfig) ProtoTargetAbsPath(serviceGroup, protoPath string
 	}
 	if useCentralRepo {
 		elems = append(elems, GlobalConfig.ProtoCentralRepoPath)
+		if serviceGroup != "" {
+			elems = append(elems, serviceGroup)
+		}
 	} else {
 		if GlobalConfig.TargetBaseDir == "" {
 			GlobalConfig.TargetBaseDir, _ = os.Getwd()
@@ -173,9 +180,6 @@ func (tmplCfg *TemplateConfig) ProtoTargetAbsPath(serviceGroup, protoPath string
 		if GlobalConfig.GoModulePrefix != "" {
 			elems = append(elems, GlobalConfig.GoModulePrefix)
 		}
-	}
-	if serviceGroup != "" {
-		elems = append(elems, serviceGroup)
 	}
 	if !strings.HasSuffix(protoPath, ProtoFileSuffix) {
 		protoPath = fmt.Sprintf("%s.proto", protoPath)
@@ -188,7 +192,9 @@ func (tmplCfg *TemplateConfig) ProtoTargetAbsPath(serviceGroup, protoPath string
 	} else if !useCentralRepo {
 		serviceName := strings.TrimSuffix(protoPath, ProtoFileSuffix)
 		for _, el := range tmplCfg.Target.RelativeDir.Proto {
-			elems = append(elems, strings.ReplaceAll(el, ServiceNameVar, serviceName))
+			el = strings.ReplaceAll(el, GroupNameVar, serviceGroup)
+			el = strings.ReplaceAll(el, ServiceNameVar, serviceName)
+			elems = append(elems, el)
 		}
 		elems = append(elems, protoPath)
 	}
@@ -216,39 +222,38 @@ func (tmplCfg *TemplateConfig) ClientTargetAbsDir(serviceGroup, serviceName stri
 	}
 	return filepath.Join(elems...)
 }
-func (tmplCfg *TemplateConfig) ClientRelativeDirs(serviceName string) []string {
+func (tmplCfg *TemplateConfig) ClientRelativeDirs(group, serviceName string) []string {
 	var elems []string
 	for _, el := range tmplCfg.Target.RelativeDir.Client {
-		elems = append(elems, strings.ReplaceAll(el, ServiceNameVar, serviceName))
+		el = strings.ReplaceAll(el, GroupNameVar, group)
+		el = strings.ReplaceAll(el, ServiceNameVar, serviceName)
+		elems = append(elems, el)
 	}
 	return elems
 }
-func (tmplCfg *TemplateConfig) ServerTargetAbsDir(serviceGroup, serviceName string) string {
+func (tmplCfg *TemplateConfig) ServerTargetAbsPath(serviceGroup, serviceName string) string {
 	var elems []string
 	elems = append(elems, filepath.Join(GlobalConfig.TargetBaseDir, GlobalConfig.GoModulePrefix))
-	if serviceGroup != "" {
+	if GlobalConfig.GoModulePrefix != "" && serviceGroup != "" {
 		elems = append(elems, serviceGroup)
 	}
 	for _, el := range tmplCfg.Target.RelativeDir.Server {
-		elems = append(elems, strings.ReplaceAll(el, ServiceNameVar, serviceName))
+		el = strings.ReplaceAll(el, GroupNameVar, serviceGroup)
+		el = strings.ReplaceAll(el, ServiceNameVar, serviceName)
+		elems = append(elems, el)
 	}
 	return filepath.Join(elems...)
 }
-func (tmplCfg *TemplateConfig) ServerRelativeDirs(serviceName string) []string {
+func (tmplCfg *TemplateConfig) ServerRelativeDirs(group, serviceName string) []string {
 	var elems []string
 	for _, el := range tmplCfg.Target.RelativeDir.Server {
-		elems = append(elems, strings.ReplaceAll(el, ServiceNameVar, serviceName))
+		el = strings.ReplaceAll(el, GroupNameVar, group)
+		el = strings.ReplaceAll(el, ServiceNameVar, serviceName)
+		elems = append(elems, el)
 	}
 	return elems
 }
 
-func (tmplCfg *TemplateConfig) ServerRelativePath(serviceName string) string {
-	var elems []string
-	for _, el := range tmplCfg.Target.RelativeDir.Server {
-		elems = append(elems, strings.ReplaceAll(el, ServiceNameVar, serviceName))
-	}
-	return filepath.Join(elems...)
-}
 func (tmplCfg *TemplateConfig) ProjectTargetAbsDir(serviceGroup string, projectName string) string {
 	var elems []string
 	if GlobalConfig.TargetBaseDir == "" {
@@ -259,4 +264,15 @@ func (tmplCfg *TemplateConfig) ProjectTargetAbsDir(serviceGroup string, projectN
 		elems = append(elems, projectName)
 	}
 	return filepath.Join(elems...)
+}
+
+func (tmplCfg *TemplateConfig) ProcessFilePath(targetRootDir, tmplFilePath, rootTmplPath, tmplName string) string {
+	fileName := tmplCfg.GetFileName(tmplName)
+	parentPath := strings.TrimSuffix(strings.TrimPrefix(tmplFilePath, rootTmplPath), tmplName)
+	targetFile := targetRootDir + parentPath + fileName
+	return targetFile
+}
+
+func (tmplCfg *TemplateConfig) GetFileName(tmplName string) string {
+	return strings.TrimSuffix(tmplName, tmplCfg.TempFileExtSuffix())
 }
