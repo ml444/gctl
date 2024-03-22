@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"runtime"
 
 	"github.com/ml444/gkit/config"
@@ -45,6 +46,13 @@ type Config struct {
 
 	TemplatesBaseDir string          `yaml:"TemplatesBaseDir" env:"name=GCTL_TEMPLATES_BASE_DIR"`
 	TemplatesConf    *TemplateConfig `yaml:"TemplatesConf"`
+
+	// @desc: usage of yaml
+	// ProtoPlugins:
+	//   go_out: ""
+	//   go-http_out: ""
+	//   go-field_out: "include_prefix=Model"
+	ProtoPlugins map[string]string `yaml:"ProtoPlugins"`
 }
 
 func (c *Config) IsRelativePath() bool {
@@ -78,11 +86,15 @@ func InitConfig() error {
 		return nil
 	}
 InitTemplates:
-	_, err = GetTmplFilesConf()
-	if err != nil {
-		log.Errorf("err: %v", err)
-		return err
+	if tmpCfg := GlobalConfig.TemplatesConf; tmpCfg == nil || reflect.DeepEqual(tmpCfg, reflect.New(reflect.TypeOf(TemplateConfig{})).Interface()) {
+		log.Info("template conf is nil")
+		GlobalConfig.TemplatesConf, err = InitTemplateCfg()
+		if err != nil {
+			log.Errorf("err: %v", err)
+			return err
+		}
 	}
+
 	return nil
 }
 func IsFileExist(name string) bool {

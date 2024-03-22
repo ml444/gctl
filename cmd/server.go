@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/fs"
 	"path/filepath"
+	"strings"
 
 	"github.com/ml444/gctl/config"
 	"github.com/ml444/gctl/internal/db"
@@ -85,14 +86,30 @@ var serverCmd = &cobra.Command{
 				return err
 			}
 			if info.IsDir() {
-				log.Debugf("skipping a dir without errors: %+v \n", info.Name())
+				log.Debugf("skip the dir: %s \n", info.Name())
 				return nil
 			}
 
 			targetFile := tmplCfg.ProcessFilePath(serverRootDir, path, serverTempDir, info.Name())
-			if util.IsFileExist(targetFile) && onceFileMap[tmplCfg.GetFileName(info.Name())] {
-				log.Printf("[%s] file is exist in this directory, skip it", targetFile)
-				return nil
+			if util.IsFileExist(targetFile) {
+				if _, ok := onceFileMap[tmplCfg.GetFileName(info.Name())]; ok {
+					log.Printf("[%s] file is exist in this directory, skip it", targetFile)
+					return nil
+				}
+				if !strings.HasSuffix(targetFile, ".go") {
+					log.Debugf("skip it, not a go file: %s \n", targetFile)
+					return nil
+				}
+				var existedFileAST *parser.GoFileAST
+				existedFileAST, err = parser.ParseFile(targetFile)
+				if err != nil {
+					log.Info(err)
+					return err
+				}
+				ctx.ExistedGoFile = existedFileAST
+				log.Infof("ExistedFile: %+v \n", existedFileAST)
+			} else {
+				ctx.ExistedGoFile = nil
 			}
 
 			log.Infof("generating file: %s", targetFile)

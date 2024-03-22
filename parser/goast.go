@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -102,7 +103,10 @@ func (pd *CtxData) parseServiceMethod(astFile *ast.File) {
 }
 
 type GoFileAST struct {
-	Consts  map[string]struct{}
+	Consts map[string]struct{}
+	// dbUser:var
+	// NewUserService:func
+	// UserService:type
 	Objects map[string]string
 	Funcs   map[string]struct{}
 	Structs map[string]*StructAST
@@ -166,6 +170,7 @@ func ParseFile(filePath string) (*GoFileAST, error) {
 					if !ok {
 						st = &StructAST{
 							StructName: svcName,
+							Methods:    map[string]*MethodAST{},
 						}
 						data.Structs[svcName] = st
 					}
@@ -173,13 +178,18 @@ func ParseFile(filePath string) (*GoFileAST, error) {
 						Name: methodName,
 					}
 					for _, arg := range v.Type.Params.List {
-						reqExpr := arg.Type.(*ast.StarExpr).X.(*ast.SelectorExpr)
+						var reqExpr *ast.SelectorExpr
+						if star, ok := arg.Type.(*ast.StarExpr); ok {
+							reqExpr = star.X.(*ast.SelectorExpr)
+
+						} else {
+							reqExpr = arg.Type.(*ast.SelectorExpr)
+						}
 						req := strings.Join([]string{reqExpr.X.(*ast.Ident).Name, reqExpr.Sel.Name}, ".")
 						method.ReqArgs = append(method.ReqArgs, req)
 					}
 					for _, arg := range v.Type.Results.List {
-						rspExpr := arg.Type.(*ast.StarExpr).X.(*ast.SelectorExpr)
-						rsp := strings.Join([]string{rspExpr.X.(*ast.Ident).Name, rspExpr.Sel.Name}, ".")
+						rsp := getIdenName(arg.Type)
 						method.RspArgs = append(method.RspArgs, rsp)
 					}
 					st.Methods[methodName] = method
@@ -191,4 +201,18 @@ func ParseFile(filePath string) (*GoFileAST, error) {
 		}
 	}
 	return &data, nil
+}
+
+func getIdenName(x ast.Expr) string {
+	name := ""
+	switch t := x.(type) {
+	case *ast.StarExpr:
+		name = getIdenName(t.X)
+	case *ast.SelectorExpr:
+		pre := getIdenName(t.X)
+		name = fmt.Sprintf("%s.%s", pre, t.Sel.Name)
+	case *ast.Ident:
+		name = t.Name
+	}
+	return name
 }

@@ -39,15 +39,18 @@ type TemplateConfig struct {
 
 // var TmplFilesConf TemplateConfig
 
+func InitTemplateCfg() (*TemplateConfig, error) {
+	tcfg := &TemplateConfig{}
+	err := tcfg.Init()
+	if err != nil {
+		return nil, err
+	}
+	return tcfg, nil
+}
+
 func GetTmplFilesConf() (*TemplateConfig, error) {
-	if GlobalConfig.TemplatesConf == nil || GlobalConfig.TemplatesConf.Template.ProtoFilename == "" {
-		tcfg := &TemplateConfig{}
-		err := tcfg.Init()
-		if err != nil {
-			return nil, err
-		}
-		GlobalConfig.TemplatesConf = tcfg
-		return tcfg, nil
+	if GlobalConfig.TemplatesConf == nil {
+		return InitTemplateCfg()
 	}
 	return GlobalConfig.TemplatesConf, nil
 }

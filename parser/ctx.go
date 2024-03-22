@@ -14,7 +14,6 @@ type CtxData struct {
 	Cfg       *config.Config
 	Command   string
 	GoVersion string
-	//ProjectGroup string
 	Ports        []int
 	StartErrCode int
 	EndErrCode   int
@@ -38,14 +37,18 @@ type CtxData struct {
 	MessageList      []*Message
 	ModelFieldList   []string
 
-	// from go file
-	FileName         string
+	// Deprecated: from go file
 	ServiceMethodMap map[string]map[string]struct {
 		Req string
 		Rsp string
 	}
-	ObjectMap   map[string]string
+	// Deprecated: from go file
+	ObjectMap map[string]string
+	// Deprecated: from go file
 	FuncBodyMap map[string]string
+
+	// parse the specified go file
+	ExistedGoFile *GoFileAST
 }
 
 type Service struct {

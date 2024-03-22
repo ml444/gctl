@@ -167,27 +167,30 @@ func GeneratePbFiles(pd *parser.CtxData, basePath string, needGenGrpcPb bool) er
 	switch runtime.GOOS {
 	case "windows":
 		protocName = "protoc.exe"
-		//protoGenGoName = "protoc-gen-go.exe"
 	default:
 		protocName = "protoc"
-		//protoGenGoName = "protoc-gen-go"
 	}
-	// goPath := os.Getenv("GOPATH")
-	// if goPath == "" {
-	// 	goPath = build.Default.GOPATH
-	// }
-	//protoGenGoPath := filepath.ToSlash(filepath.Join(goPath, "bin", protoGenGoName))
-	//args = append(args, fmt.Sprintf("--plugin=protoc-gen-go=%s", protoGenGoPath))
-	args = append(args, fmt.Sprintf("--go_out=%s", filepath.ToSlash(basePath)))
-	args = append(args, fmt.Sprintf("--go-http_out=%s", filepath.ToSlash(basePath)))
-	args = append(args, fmt.Sprintf("--go-gorm_out=%s", filepath.ToSlash(basePath)))
-	args = append(args, fmt.Sprintf("--go-errcode_out=%s", filepath.ToSlash(basePath)))
-	args = append(args, fmt.Sprintf("--go-validate_out=%s", filepath.ToSlash(basePath)))
-	args = append(args, fmt.Sprintf("--go-field_out=include_prefix=Model:%s", filepath.ToSlash(basePath)))
-	//args = append(args, fmt.Sprintf("--openapi_out=paths=import:%s", filepath.ToSlash(basePath)))
-	//args = append(args, "--openapi_out=paths=source_relative:.")
-	if needGenGrpcPb {
-		args = append(args, fmt.Sprintf("--go-grpc_out=%s", filepath.ToSlash(basePath)))
+
+	if len(config.GlobalConfig.ProtoPlugins) > 0 {
+		for plugin, params := range config.GlobalConfig.ProtoPlugins {
+			arg := filepath.ToSlash(basePath)
+			if params != "" {
+				arg = fmt.Sprintf("%s:%s", params, arg)
+			}
+			args = append(args, fmt.Sprintf("--%s=%s", plugin, arg))
+		}
+	} else {
+		args = append(args, fmt.Sprintf("--go_out=%s", filepath.ToSlash(basePath)))
+		args = append(args, fmt.Sprintf("--go-http_out=%s", filepath.ToSlash(basePath)))
+		args = append(args, fmt.Sprintf("--go-gorm_out=%s", filepath.ToSlash(basePath)))
+		args = append(args, fmt.Sprintf("--go-errcode_out=%s", filepath.ToSlash(basePath)))
+		args = append(args, fmt.Sprintf("--go-validate_out=%s", filepath.ToSlash(basePath)))
+		args = append(args, fmt.Sprintf("--go-field_out=include_prefix=Model:%s", filepath.ToSlash(basePath)))
+		//args = append(args, fmt.Sprintf("--openapi_out=paths=import:%s", filepath.ToSlash(basePath)))
+		//args = append(args, "--openapi_out=paths=source_relative:.")
+		if needGenGrpcPb {
+			args = append(args, fmt.Sprintf("--go-grpc_out=%s", filepath.ToSlash(basePath)))
+		}
 	}
 
 	// include proto

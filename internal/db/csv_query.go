@@ -55,7 +55,7 @@ func (a *CSVAssign) GetOrAssignPortAndErrcode(port, errCode *int) error {
 		if foundRecord == nil {
 			// create record
 			foundRecord = a.createRecord()
-			log.Info("create new service record: %v", foundRecord)
+			log.Infof("create new service record: %+v \n", foundRecord)
 		} else {
 			*port = int(foundRecord.StartPort)
 		}
@@ -64,7 +64,7 @@ func (a *CSVAssign) GetOrAssignPortAndErrcode(port, errCode *int) error {
 		if foundRecord == nil {
 			// create record
 			foundRecord = a.createRecord()
-			log.Info("create new service record: %v", foundRecord)
+			log.Infof("create new service record: %+v \n", foundRecord)
 		} else {
 			*errCode = int(foundRecord.StartErrCode)
 
