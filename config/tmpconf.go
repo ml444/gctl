@@ -28,6 +28,7 @@ type TemplateConfig struct {
 	Template struct {
 		FilesFormatSuffix string `yaml:"filesFormatSuffix"`
 		ProtoFilename     string `yaml:"protoFilename"`
+		ServiceFileName   string `yaml:"serviceFileName"`
 		RelativeDir       struct {
 			Project []string `yaml:"project"`
 			Proto   []string `yaml:"proto"`

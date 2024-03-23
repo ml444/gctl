@@ -39,6 +39,10 @@ func ParseProtoFile(protoFilepath string) (*CtxData, error) {
 		if ctxData.Options == nil {
 			ctxData.Options = make(map[string]string)
 		}
+		// if svc, ok := o.Parent.(*proto.RPC); ok {
+		// 	log.Infof("==> Option: %+v \n", o.Name)
+		// 	log.Infof("==> Option: %+v \n", svc.Name)
+		// }
 		ctxData.Options[o.Name] = o.Constant.Source
 	}
 
@@ -147,9 +151,9 @@ func ParseProtoFile(protoFilepath string) (*CtxData, error) {
 			ctxData.ImportMap[i.Filename] = true
 		}()
 
-		if strings.HasPrefix(i.Filename, "google/") {
-			return
-		}
+		// if strings.HasPrefix(i.Filename, "google/") {
+		// 	return
+		// }
 	}
 
 	handleMessage := func(m *proto.Message) {
@@ -223,6 +227,8 @@ func (p *ProtoVisitor) VisitPackage(pkg *proto.Package) {
 }
 
 func (p *ProtoVisitor) VisitOption(o *proto.Option) {
+	// NOTE: only into Message
+	// log.Info("===> option: ", o)
 }
 
 func (p *ProtoVisitor) VisitImport(i *proto.Import) {

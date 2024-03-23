@@ -1,11 +1,12 @@
 package cmd
 
 import (
+	log "github.com/ml444/glog"
+
 	"github.com/ml444/gctl/config"
 	"github.com/ml444/gctl/internal/db"
 	"github.com/ml444/gctl/util"
 
-	"github.com/ml444/gkit/log"
 	"github.com/spf13/cobra"
 
 	"github.com/ml444/gctl/parser"

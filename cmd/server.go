@@ -91,32 +91,57 @@ var serverCmd = &cobra.Command{
 			}
 
 			targetFile := tmplCfg.ProcessFilePath(serverRootDir, path, serverTempDir, info.Name())
-			if util.IsFileExist(targetFile) {
-				if _, ok := onceFileMap[tmplCfg.GetFileName(info.Name())]; ok {
-					log.Printf("[%s] file is exist in this directory, skip it", targetFile)
-					return nil
+			if info.Name() == tmplCfg.Template.ServiceFileName && len(ctx.ServiceList) > 1 {
+				sourceSvcList := ctx.ServiceList
+				for i, svc := range sourceSvcList {
+					newTargetFile := targetFile
+					if i != 0 {
+						fileName := tmplCfg.GetFileName(info.Name())
+						newFileName := fmt.Sprintf(
+							"%s_%s.go",
+							strings.TrimSuffix(tmplCfg.GetFileName(info.Name()), ".go"),
+							svc.ServiceName,
+						)
+						newTargetFile = strings.ReplaceAll(targetFile, fileName, newFileName)
+					}
+					ctx.ServiceList = []*parser.Service{svc}
+					err = genFile(path, newTargetFile, info.Name(), ctx, tmplCfg, onceFileMap)
+					if err != nil {
+						log.Info(err)
+						return err
+					}
 				}
-				if !strings.HasSuffix(targetFile, ".go") {
-					log.Debugf("skip it, not a go file: %s \n", targetFile)
-					return nil
-				}
-				var existedFileAST *parser.GoFileAST
-				existedFileAST, err = parser.ParseFile(targetFile)
-				if err != nil {
-					log.Info(err)
-					return err
-				}
-				ctx.ExistedGoFile = existedFileAST
-				log.Infof("ExistedFile: %+v \n", existedFileAST)
-			} else {
-				ctx.ExistedGoFile = nil
-			}
+				ctx.ServiceList = sourceSvcList
 
-			log.Infof("generating file: %s", targetFile)
-			err = parser.GenerateTemplate(targetFile, path, ctx)
-			if err != nil {
-				return err
+			} else {
+				return genFile(path, targetFile, info.Name(), ctx, tmplCfg, onceFileMap)
 			}
+			// if util.IsFileExist(targetFile) {
+			// 	if _, ok := onceFileMap[tmplCfg.GetFileName(info.Name())]; ok {
+			// 		log.Printf("[%s] file is exist in this directory, skip it", targetFile)
+			// 		return nil
+			// 	}
+			// 	if !strings.HasSuffix(targetFile, ".go") {
+			// 		log.Debugf("skip it, not a go file: %s \n", targetFile)
+			// 		return nil
+			// 	}
+			// 	var existedFileAST *parser.GoFileAST
+			// 	existedFileAST, err = parser.ParseFile(targetFile)
+			// 	if err != nil {
+			// 		log.Info(err)
+			// 		return err
+			// 	}
+			// 	ctx.ExistedGoFile = existedFileAST
+			// 	log.Infof("ExistedFile: %+v \n", existedFileAST)
+			// } else {
+			// 	ctx.ExistedGoFile = nil
+			// }
+			//
+			// log.Infof("generating file: %s", targetFile)
+			// err = parser.GenerateTemplate(targetFile, path, ctx)
+			// if err != nil {
+			// 	return err
+			// }
 			return nil
 		})
 		if err != nil {
@@ -129,4 +154,35 @@ var serverCmd = &cobra.Command{
 			util.CmdExec("cd " + serverRootDir + " && go mod tidy && go fmt ./...")
 		}
 	},
+}
+
+func genFile(path, targetFile, tempName string, ctx *parser.CtxData, tmplCfg *config.TemplateConfig, onceFileMap map[string]bool) error {
+	var err error
+	if util.IsFileExist(targetFile) {
+		if _, ok := onceFileMap[tmplCfg.GetFileName(tempName)]; ok {
+			log.Printf("[%s] file is exist in this directory, skip it", targetFile)
+			return nil
+		}
+		if !strings.HasSuffix(targetFile, ".go") {
+			log.Debugf("skip it, not a go file: %s \n", targetFile)
+			return nil
+		}
+		var existedFileAST *parser.GoFileAST
+		existedFileAST, err = parser.ParseFile(targetFile)
+		if err != nil {
+			log.Info(err)
+			return err
+		}
+		ctx.ExistedGoFile = existedFileAST
+		log.Infof("ExistedFile: %+v \n", existedFileAST)
+	} else {
+		ctx.ExistedGoFile = nil
+	}
+
+	log.Infof("generating file: %s", targetFile)
+	err = parser.GenerateTemplate(targetFile, path, ctx)
+	if err != nil {
+		return err
+	}
+	return nil
 }
