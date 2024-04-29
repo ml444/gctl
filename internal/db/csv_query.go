@@ -80,6 +80,9 @@ func (a *CSVAssign) GetModuleID() (int, error) {
 		return 0, err
 	}
 	foundRecord := a.findRecord(records)
+	if foundRecord == nil {
+		return 0, nil
+	}
 	return int(foundRecord.Id), nil
 }
 
