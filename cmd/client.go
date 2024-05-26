@@ -171,30 +171,35 @@ func GeneratePbFiles(pd *parser.CtxData, basePath string, needGenGrpcPb bool) er
 		protocName = "protoc"
 	}
 
-	protoDir, protoName := filepath.Split(pd.FilePath)
-	args = append(args, fmt.Sprintf("-I=%s", protoDir), protoName)
+	protoFileRelativePath, err := filepath.Rel(basePath, pd.FilePath)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+	//protoDir := filepath.Dir(pd.FilePath)
 	if len(config.GlobalConfig.ProtoPlugins) > 0 {
-		for plugin, params := range config.GlobalConfig.ProtoPlugins {
-			arg := filepath.ToSlash(basePath)
-			if params != "" {
-				arg = fmt.Sprintf("%s:%s", params, arg)
-			}
-			args = append(args, fmt.Sprintf("--%s=%s", plugin, arg))
+		for _, plugin := range config.GlobalConfig.ProtoPlugins {
+			args = append(args, plugin)
 		}
 	} else {
-		args = append(args, fmt.Sprintf("--go_out=%s", filepath.ToSlash(basePath)))
-		args = append(args, fmt.Sprintf("--go-http_out=%s", filepath.ToSlash(basePath)))
-		args = append(args, fmt.Sprintf("--go-gorm_out=%s", filepath.ToSlash(basePath)))
-		args = append(args, fmt.Sprintf("--go-errcode_out=%s", filepath.ToSlash(basePath)))
-		args = append(args, fmt.Sprintf("--go-validate_out=%s", filepath.ToSlash(basePath)))
-		args = append(args, fmt.Sprintf("--go-field_out=include_prefix=Model:%s", filepath.ToSlash(basePath)))
-		args = append(args, fmt.Sprintf("--openapi_out=paths=import:%s", filepath.ToSlash(protoDir)))
-		args = append(args, fmt.Sprintf("--descriptor_set_out=%s/%s_pb.descriptor", filepath.ToSlash(protoDir), strings.TrimSuffix(protoName, ".proto")))
+		//args = append(args, fmt.Sprintf("--go_out=%s", filepath.ToSlash(basePath)))
+		//args = append(args, fmt.Sprintf("--go-grpc_out=%s", filepath.ToSlash(basePath)))
+		//args = append(args, fmt.Sprintf("--go-http_out=%s", filepath.ToSlash(basePath)))
+		//args = append(args, fmt.Sprintf("--go-gorm_out=%s", filepath.ToSlash(basePath)))
+		//args = append(args, fmt.Sprintf("--go-errcode_out=%s", filepath.ToSlash(basePath)))
+		//args = append(args, fmt.Sprintf("--go-validate_out=%s", filepath.ToSlash(basePath)))
+		//args = append(args, fmt.Sprintf("--go-field_out=include_prefix=Model:%s", filepath.ToSlash(basePath)))
+		//args = append(args, fmt.Sprintf("--openapiv2_out=%s", filepath.ToSlash(protoDir)))
+		args = append(args, "--go_out=paths=source_relative:.")
+		args = append(args, "--go-grpc_out=paths=source_relative:.")
+		args = append(args, "--go-http_out=paths=source_relative:.")
+		args = append(args, "--go-gorm_out=paths=source_relative:.")
+		args = append(args, "--go-errcode_out=paths=source_relative:.")
+		args = append(args, "--go-validate_out=paths=source_relative:.")
+		args = append(args, "--go-field_out=paths=source_relative,include_prefix=Model:.")
+		args = append(args, "--openapiv2_out=.")
+		args = append(args, fmt.Sprintf("--descriptor_set_out=%s_pb.descriptor", strings.TrimSuffix(protoFileRelativePath, ".proto")))
 		args = append(args, "--include_source_info")
-		//args = append(args, "--openapi_out=paths=source_relative:.")
-		if needGenGrpcPb {
-			args = append(args, fmt.Sprintf("--go-grpc_out=%s", filepath.ToSlash(basePath)))
-		}
 	}
 
 	// include proto
@@ -203,6 +208,7 @@ func GeneratePbFiles(pd *parser.CtxData, basePath string, needGenGrpcPb bool) er
 		args = append(args, fmt.Sprintf("--proto_path=%s", x))
 	}
 
+	args = append(args, fmt.Sprintf("-I=%s", basePath), protoFileRelativePath)
 	// protocPath := filepath.ToSlash(filepath.Join(goPath, "bin", protocName))
 	// cmd := exec.Command(protocPath, args...)
 	cmd := exec.Command(protocName, args...)

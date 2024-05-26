@@ -15,6 +15,11 @@
 	go install github.com/ml444/gctl@latest
 ```
 
+**OpenAPI Swagger options**:
+- openapi.yaml: `go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest` -> `--openapi_out=.`
+- swagger.json(默认): `go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest` -> `--openapiv2_out=.`
+
+
 ## 配置
 1. **通过环境变量来配置**
 ```shell

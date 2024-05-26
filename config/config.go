@@ -49,10 +49,10 @@ type Config struct {
 
 	// @desc: usage of yaml
 	// ProtoPlugins:
-	//   go_out: ""
-	//   go-http_out: ""
-	//   go-field_out: "include_prefix=Model"
-	ProtoPlugins map[string]string `yaml:"ProtoPlugins"`
+	//   - "--go_out=paths=source_relative:."
+	//   - "--go-grpc_out=paths=source_relative:."
+	//   - "--go-field_out=paths=source_relative,include_prefix=Model:."
+	ProtoPlugins []string `yaml:"ProtoPlugins"`
 }
 
 func (c *Config) IsRelativePath() bool {

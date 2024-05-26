@@ -35,6 +35,9 @@ A code generation and checking tool for Go microservices
 	go install github.com/ml444/gkit/cmd/protoc-gen-go-validate@latest
 	go install github.com/ml444/gctl@latest
 ```
+**OpenAPI Swagger options**:
+- openapi.yaml: `go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest` -> `--openapi_out=.`
+- swagger.json(gctl default): `go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest` -> `--openapiv2_out=.`
 
 # See also
 > https://github.com/grpc/grpc-go/tree/master/examples
