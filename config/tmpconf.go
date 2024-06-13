@@ -120,6 +120,7 @@ func (tmplCfg *TemplateConfig) ClientTmplAbsDir() string {
 	elems = append(elems, tmplCfg.Template.RelativeDir.Client...)
 	return filepath.Join(elems...)
 }
+
 func (tmplCfg *TemplateConfig) ServerTmplAbsDir() string {
 	var elems []string
 	elems = append(elems, GlobalConfig.TemplatesBaseDir)
@@ -166,6 +167,7 @@ func (tmplCfg *TemplateConfig) ProtoTargetAbsPath(serviceGroup, protoPath string
 	if filepath.IsAbs(protoPath) {
 		return protoPath
 	}
+	log.Infof("svcGroup: %s, protoFile: %s\n", serviceGroup, protoPath)
 	var elems []string
 	var useCentralRepo bool
 	if GlobalConfig.ProtoCentralRepoPath != "" {
@@ -187,7 +189,7 @@ func (tmplCfg *TemplateConfig) ProtoTargetAbsPath(serviceGroup, protoPath string
 	}
 	if !strings.HasSuffix(protoPath, ProtoFileSuffix) {
 		protoPath = fmt.Sprintf("%s.proto", protoPath)
-		//serviceName = strings.TrimSuffix(serviceName, ProtoFileSuffix)
+		// serviceName = strings.TrimSuffix(serviceName, ProtoFileSuffix)
 	}
 	if len(strings.Split(protoPath, "/")) > 1 {
 		protoPath = strings.TrimLeft(protoPath, "./")
@@ -200,11 +202,12 @@ func (tmplCfg *TemplateConfig) ProtoTargetAbsPath(serviceGroup, protoPath string
 			el = strings.ReplaceAll(el, ServiceNameVar, serviceName)
 			elems = append(elems, el)
 		}
-		elems = append(elems, protoPath)
 	}
 
+	elems = append(elems, protoPath)
 	return filepath.Join(elems...)
 }
+
 func (tmplCfg *TemplateConfig) ClientTargetAbsDir0(packagePath string) string {
 	if GlobalConfig.TargetBaseDir == "" {
 		GlobalConfig.TargetBaseDir, _ = os.Getwd()
@@ -215,6 +218,7 @@ func (tmplCfg *TemplateConfig) ClientTargetAbsDir0(packagePath string) string {
 	}
 	return filepath.Join(GlobalConfig.TargetBaseDir, packagePath)
 }
+
 func (tmplCfg *TemplateConfig) ClientTargetAbsDir(serviceGroup, serviceName string) string {
 	var elems []string
 	elems = append(elems, filepath.Join(GlobalConfig.TargetBaseDir, GlobalConfig.GoModulePrefix))
@@ -226,6 +230,7 @@ func (tmplCfg *TemplateConfig) ClientTargetAbsDir(serviceGroup, serviceName stri
 	}
 	return filepath.Join(elems...)
 }
+
 func (tmplCfg *TemplateConfig) ClientRelativeDirs(group, serviceName string) []string {
 	var elems []string
 	for _, el := range tmplCfg.Target.RelativeDir.Client {
@@ -235,6 +240,7 @@ func (tmplCfg *TemplateConfig) ClientRelativeDirs(group, serviceName string) []s
 	}
 	return elems
 }
+
 func (tmplCfg *TemplateConfig) ServerTargetAbsPath(serviceGroup, serviceName string) string {
 	var elems []string
 	elems = append(elems, filepath.Join(GlobalConfig.TargetBaseDir, GlobalConfig.GoModulePrefix))
@@ -248,6 +254,7 @@ func (tmplCfg *TemplateConfig) ServerTargetAbsPath(serviceGroup, serviceName str
 	}
 	return filepath.Join(elems...)
 }
+
 func (tmplCfg *TemplateConfig) ServerRelativeDirs(group, serviceName string) []string {
 	var elems []string
 	for _, el := range tmplCfg.Target.RelativeDir.Server {

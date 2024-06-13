@@ -39,7 +39,7 @@ var clientCmd = &cobra.Command{
 			return
 		}
 		tmplCfg := config.GlobalConfig.TemplatesConf
-		name = tmplCfg.ProtoTargetAbsPath(projectGroup, name)
+		protoFilePath := tmplCfg.ProtoTargetAbsPath(projectGroup, name)
 		tmpDir := tmplCfg.ClientTmplAbsDir()
 		log.Debug("template path of code generation: ", tmpDir)
 		onceFiles := config.GlobalConfig.OnceFiles
@@ -47,13 +47,14 @@ var clientCmd = &cobra.Command{
 		for _, fileName := range onceFiles {
 			onceFileMap[fileName] = true
 		}
-		pd, err := parser.ParseProtoFile(name)
+		pdCtx, err := parser.ParseProtoFile(protoFilePath)
 		if err != nil {
 			log.Errorf("err: %v", err)
 			return
 		}
-		pd.Group = projectGroup
+		pdCtx.Group = projectGroup
 		serviceName := getProtoName(name)
+		pdCtx.Name = serviceName
 		if config.GlobalConfig.EnableAssignErrcode {
 			var moduleID int
 			svcAssign, err := db.GetDispatcher(serviceName, projectGroup, &config.GlobalConfig)
@@ -67,10 +68,10 @@ var clientCmd = &cobra.Command{
 				log.Error(err)
 				return
 			}
-			pd.ModuleID = moduleID
+			pdCtx.ModuleID = moduleID
 		}
 		var clientRootDir string
-		if pkgPath := pd.Options["go_package"]; pkgPath != "" {
+		if pkgPath := pdCtx.Options["go_package"]; pkgPath != "" {
 			if strings.Contains(pkgPath, ";") {
 				pkgPath = strings.Split(pkgPath, ";")[0]
 			}
@@ -78,6 +79,8 @@ var clientCmd = &cobra.Command{
 		} else {
 			clientRootDir = tmplCfg.ClientTargetAbsDir(projectGroup, serviceName)
 		}
+		pdCtx.ClientDir = clientRootDir
+		log.Info("clientRootDir: ", clientRootDir)
 		err = filepath.Walk(tmpDir, func(path string, info fs.FileInfo, err error) error {
 			if err != nil {
 				log.Errorf("prevent panic by handling failure accessing a path %q: %v\n", path, err)
@@ -94,7 +97,7 @@ var clientCmd = &cobra.Command{
 			}
 
 			log.Infof("generating file: %s \n", targetFile)
-			err = parser.GenerateTemplate(targetFile, path, pd)
+			err = parser.GenerateTemplate(targetFile, path, pdCtx)
 			if err != nil {
 				return err
 			}
@@ -111,12 +114,12 @@ var clientCmd = &cobra.Command{
 				return
 			}
 			baseDir := config.GlobalConfig.TargetBaseDir
-			if len(pd.Options["go_package"]) == 0 {
+			if len(pdCtx.Options["go_package"]) == 0 {
 				baseDir = clientRootDir
 			}
 			log.Debug("root location of code generation: ", baseDir)
 			log.Info("generating protobuf file")
-			err = GeneratePbFiles(pd, baseDir, needGenGrpcPb)
+			err = GeneratePbFiles(pdCtx, baseDir, needGenGrpcPb)
 			if err != nil {
 				log.Error(err)
 				return
@@ -159,11 +162,12 @@ func checkProtoc() bool {
 	}
 	return true
 }
+
 func GeneratePbFiles(pd *parser.CtxData, basePath string, needGenGrpcPb bool) error {
 	var err error
 	var args []string
 	var protocName string
-	//var protoGenGoName string
+	// var protoGenGoName string
 	switch runtime.GOOS {
 	case "windows":
 		protocName = "protoc.exe"
@@ -171,34 +175,34 @@ func GeneratePbFiles(pd *parser.CtxData, basePath string, needGenGrpcPb bool) er
 		protocName = "protoc"
 	}
 
-	protoFileRelativePath, err := filepath.Rel(basePath, pd.FilePath)
+	clientRelativePath, err := filepath.Rel(basePath, pd.ClientDir)
 	if err != nil {
 		log.Error(err)
 		return err
 	}
-	//protoDir := filepath.Dir(pd.FilePath)
+	protoDir, protoName := filepath.Split(pd.FilePath)
+	log.Info("protoDir:", protoDir)
+	log.Info("clientRelPath:", clientRelativePath)
 	if len(config.GlobalConfig.ProtoPlugins) > 0 {
-		for _, plugin := range config.GlobalConfig.ProtoPlugins {
-			args = append(args, plugin)
-		}
+		args = append(args, config.GlobalConfig.ProtoPlugins...)
 	} else {
-		//args = append(args, fmt.Sprintf("--go_out=%s", filepath.ToSlash(basePath)))
-		//args = append(args, fmt.Sprintf("--go-grpc_out=%s", filepath.ToSlash(basePath)))
-		//args = append(args, fmt.Sprintf("--go-http_out=%s", filepath.ToSlash(basePath)))
-		//args = append(args, fmt.Sprintf("--go-gorm_out=%s", filepath.ToSlash(basePath)))
-		//args = append(args, fmt.Sprintf("--go-errcode_out=%s", filepath.ToSlash(basePath)))
-		//args = append(args, fmt.Sprintf("--go-validate_out=%s", filepath.ToSlash(basePath)))
-		//args = append(args, fmt.Sprintf("--go-field_out=include_prefix=Model:%s", filepath.ToSlash(basePath)))
-		//args = append(args, fmt.Sprintf("--openapiv2_out=%s", filepath.ToSlash(protoDir)))
-		args = append(args, "--go_out=paths=source_relative:.")
-		args = append(args, "--go-grpc_out=paths=source_relative:.")
-		args = append(args, "--go-http_out=paths=source_relative:.")
-		args = append(args, "--go-gorm_out=paths=source_relative:.")
-		args = append(args, "--go-errcode_out=paths=source_relative:.")
-		args = append(args, "--go-validate_out=paths=source_relative:.")
-		args = append(args, "--go-field_out=paths=source_relative,include_prefix=Model:.")
-		args = append(args, "--openapiv2_out=.")
-		args = append(args, fmt.Sprintf("--descriptor_set_out=%s_pb.descriptor", strings.TrimSuffix(protoFileRelativePath, ".proto")))
+		args = append(args, fmt.Sprintf("--go_out=%s", filepath.ToSlash(basePath)))
+		args = append(args, fmt.Sprintf("--go-grpc_out=%s", filepath.ToSlash(basePath)))
+		args = append(args, fmt.Sprintf("--go-http_out=%s", filepath.ToSlash(basePath)))
+		args = append(args, fmt.Sprintf("--go-gorm_out=%s", filepath.ToSlash(basePath)))
+		args = append(args, fmt.Sprintf("--go-errcode_out=%s", filepath.ToSlash(basePath)))
+		args = append(args, fmt.Sprintf("--go-validate_out=%s", filepath.ToSlash(basePath)))
+		args = append(args, fmt.Sprintf("--go-field_out=include_prefix=Model:%s", filepath.ToSlash(basePath)))
+		args = append(args, fmt.Sprintf("--openapiv2_out=%s", filepath.ToSlash(pd.ClientDir)))
+		// args = append(args, "--go_out=paths=source_relative:.")
+		// args = append(args, "--go-grpc_out=paths=source_relative:.")
+		// args = append(args, "--go-http_out=paths=source_relative:.")
+		// args = append(args, "--go-gorm_out=paths=source_relative:.")
+		// args = append(args, "--go-errcode_out=paths=source_relative:.")
+		// args = append(args, "--go-validate_out=paths=source_relative:.")
+		// args = append(args, "--go-field_out=paths=source_relative,include_prefix=Model:.")
+		// args = append(args, "--openapiv2_out=.")
+		args = append(args, fmt.Sprintf("--descriptor_set_out=%s_pb.descriptor", filepath.Join(clientRelativePath, pd.Name)))
 		args = append(args, "--include_source_info")
 	}
 
@@ -208,7 +212,7 @@ func GeneratePbFiles(pd *parser.CtxData, basePath string, needGenGrpcPb bool) er
 		args = append(args, fmt.Sprintf("--proto_path=%s", x))
 	}
 
-	args = append(args, fmt.Sprintf("-I=%s", basePath), protoFileRelativePath)
+	args = append(args, fmt.Sprintf("-I=%s", protoDir), protoName)
 	// protocPath := filepath.ToSlash(filepath.Join(goPath, "bin", protocName))
 	// cmd := exec.Command(protocPath, args...)
 	cmd := exec.Command(protocName, args...)

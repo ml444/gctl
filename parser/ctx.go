@@ -11,17 +11,18 @@ import (
 )
 
 type CtxData struct {
-	Cfg       *config.Config
-	Command   string
-	GoVersion string
+	Cfg          *config.Config
+	Command      string
+	GoVersion    string
 	Ports        []int
 	StartErrCode int
 	EndErrCode   int
 	ModuleID     int
 	// ModulePrefix string
 	// GoModule string
-	Name  string
-	Group string
+	Name      string
+	Group     string
+	ClientDir string
 
 	// from proto file
 	FilePath         string
@@ -60,13 +61,13 @@ type RpcMethod struct {
 	Name         string
 	RequestType  string
 	ResponseType string
-	//StreamRequest	bool
-	//StreamResponse	bool
-	//Comment
+	//  StreamRequest	bool
+	//  StreamResponse	bool
+	//  Comment
 	Options map[string]string
 
 	CommentLines []string
-	//commentMap   map[string]*linesCommentNode
+	//  commentMap   map[string]*linesCommentNode
 }
 
 type Enum struct {

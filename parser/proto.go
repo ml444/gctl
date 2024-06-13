@@ -6,27 +6,28 @@ import (
 	"strings"
 
 	"github.com/emicklei/proto"
-	log "github.com/ml444/glog"
+	log "github.com/ml444/gkit/log"
+	glog "github.com/ml444/glog"
 )
 
 // ParseProtoFile 解析proto文件
 func ParseProtoFile(protoFilepath string) (*CtxData, error) {
 	reader, err := os.Open(protoFilepath)
 	if err != nil {
-		log.Errorf("err: %v", err)
+		glog.Errorf("err: %v", err)
 		return nil, err
 	}
 	defer func() {
 		err = reader.Close()
 		if err != nil {
-			log.Fatal(err)
+			glog.Fatal(err)
 		}
 	}()
 
 	parser := proto.NewParser(reader)
 	definition, err := parser.Parse()
 	if err != nil {
-		log.Errorf("err: %v", err)
+		glog.Errorf("err: %v", err)
 		return nil, err
 	}
 	ctxData := NewCtxData()
@@ -49,7 +50,7 @@ func ParseProtoFile(protoFilepath string) (*CtxData, error) {
 	handleService := func(s *proto.Service) {
 		svc := &Service{
 			ServiceName: s.Name,
-			//RpcList:     nil,
+			// RpcList:     nil,
 		}
 
 		ctxData.ServiceList = append(ctxData.ServiceList, svc)
@@ -58,7 +59,7 @@ func ParseProtoFile(protoFilepath string) (*CtxData, error) {
 
 	handleRpcMethod := func(m *proto.RPC) {
 		options := map[string]string{}
-		log.Infof("=====> rpcName: %s", m.Name)
+		log.Infof("=====> rpcName: %s\n", m.Name)
 		method := &RpcMethod{
 			Name:         m.Name,
 			RequestType:  m.RequestType,
@@ -77,7 +78,6 @@ func ParseProtoFile(protoFilepath string) (*CtxData, error) {
 				svc.RpcList = append(svc.RpcList, method)
 			}
 		}
-
 	}
 
 	handleEnum := func(e *proto.Enum) {
@@ -105,7 +105,7 @@ func ParseProtoFile(protoFilepath string) (*CtxData, error) {
 				listReqOpt := ListReqOption{
 					ReqName:  reqName,
 					EnumName: e.Name,
-					//EnumFieldMap: map[string]string{},
+					// EnumFieldMap: map[string]string{},
 				}
 
 				fieldMap := map[string]string{}
@@ -118,7 +118,7 @@ func ParseProtoFile(protoFilepath string) (*CtxData, error) {
 						if strings.HasPrefix(line, "@valueType:") {
 							lineV := strings.TrimSpace(strings.TrimPrefix(line, "@valueType:"))
 							if vLen := len(lineV); vLen < 4 || vLen > 11 {
-								log.Warnf("this valueType dose not match the requirements: %s", line)
+								glog.Warnf("this valueType dose not match the requirements: %s", line)
 								continue
 							}
 							fieldMap[v.Name] = lineV
@@ -190,7 +190,7 @@ func ParseProtoFile(protoFilepath string) (*CtxData, error) {
 }
 
 func ToUnique(list []string) []string {
-	var m = make(map[string]struct{})
+	m := make(map[string]struct{})
 	for _, v := range list {
 		m[v] = struct{}{}
 	}
@@ -202,8 +202,8 @@ func ToUnique(list []string) []string {
 }
 
 type ProtoVisitor struct {
-	//proto.Visitor
-	//proto.RPC
+	// proto.Visitor
+	// proto.RPC
 	Name          string
 	FieldNameList []string
 	EnumFieldList []*proto.EnumField
@@ -221,8 +221,10 @@ func (p *ProtoVisitor) VisitMessage(m *proto.Message) {
 func (p *ProtoVisitor) VisitService(v *proto.Service) {
 	p.Name = v.Name
 }
+
 func (p *ProtoVisitor) VisitSyntax(s *proto.Syntax) {
 }
+
 func (p *ProtoVisitor) VisitPackage(pkg *proto.Package) {
 }
 
@@ -253,6 +255,7 @@ func (p *ProtoVisitor) VisitMapField(f *proto.MapField) {
 
 	p.Message.FieldList = append(p.Message.FieldList, &MessageField{MapField: f})
 }
+
 func (p *ProtoVisitor) VisitEnum(e *proto.Enum) {
 }
 
@@ -270,12 +273,13 @@ func (p *ProtoVisitor) VisitReserved(rs *proto.Reserved) {
 
 func (p *ProtoVisitor) VisitRPC(rpc *proto.RPC) {
 	p.Name = rpc.Name
-	//p.RequestType = rpc.RequestType
-	//p.ReturnsType = rpc.RequestType
-	//p.StreamsRequest = rpc.StreamsRequest
+	// p.RequestType = rpc.RequestType
+	// p.ReturnsType = rpc.RequestType
+	// p.StreamsRequest = rpc.StreamsRequest
 }
 
 func (p *ProtoVisitor) VisitGroup(g *proto.Group) {
 }
+
 func (p *ProtoVisitor) VisitExtensions(e *proto.Extensions) {
 }
