@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/fs"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -163,7 +164,7 @@ func checkProtoc() bool {
 	return true
 }
 
-func GeneratePbFiles(pd *parser.CtxData, basePath string, needGenGrpcPb bool) error {
+func GeneratePbFiles(pdCtx *parser.CtxData, basePath string, needGenGrpcPb bool) error {
 	var err error
 	var args []string
 	var protocName string
@@ -175,12 +176,12 @@ func GeneratePbFiles(pd *parser.CtxData, basePath string, needGenGrpcPb bool) er
 		protocName = "protoc"
 	}
 
-	clientRelativePath, err := filepath.Rel(basePath, pd.ClientDir)
+	clientRelativePath, err := filepath.Rel(basePath, pdCtx.ClientDir)
 	if err != nil {
 		log.Error(err)
 		return err
 	}
-	protoDir, protoName := filepath.Split(pd.FilePath)
+	protoDir, protoName := filepath.Split(pdCtx.FilePath)
 	log.Info("protoDir:", protoDir)
 	log.Info("clientRelPath:", clientRelativePath)
 	if len(config.GlobalConfig.ProtoPlugins) > 0 {
@@ -193,7 +194,16 @@ func GeneratePbFiles(pd *parser.CtxData, basePath string, needGenGrpcPb bool) er
 		args = append(args, fmt.Sprintf("--go-errcode_out=%s", filepath.ToSlash(basePath)))
 		args = append(args, fmt.Sprintf("--go-validate_out=%s", filepath.ToSlash(basePath)))
 		args = append(args, fmt.Sprintf("--go-field_out=include_prefix=Model:%s", filepath.ToSlash(basePath)))
-		args = append(args, fmt.Sprintf("--openapiv2_out=%s", filepath.ToSlash(pd.ClientDir)))
+		if config.GlobalConfig.SwaggerCentralRepoPath != "" {
+			swagDir := filepath.Join(config.GlobalConfig.SwaggerCentralRepoPath, pdCtx.Group)
+			if !util.IsDirExist(swagDir) {
+				os.MkdirAll(swagDir, 0o755)
+			}
+
+			args = append(args, fmt.Sprintf("--openapiv2_out=%s", swagDir))
+		} else {
+			args = append(args, fmt.Sprintf("--openapiv2_out=%s", filepath.ToSlash(pdCtx.ClientDir)))
+		}
 		// args = append(args, "--go_out=paths=source_relative:.")
 		// args = append(args, "--go-grpc_out=paths=source_relative:.")
 		// args = append(args, "--go-http_out=paths=source_relative:.")
@@ -202,7 +212,7 @@ func GeneratePbFiles(pd *parser.CtxData, basePath string, needGenGrpcPb bool) er
 		// args = append(args, "--go-validate_out=paths=source_relative:.")
 		// args = append(args, "--go-field_out=paths=source_relative,include_prefix=Model:.")
 		// args = append(args, "--openapiv2_out=.")
-		args = append(args, fmt.Sprintf("--descriptor_set_out=%s_pb.descriptor", filepath.Join(clientRelativePath, pd.Name)))
+		args = append(args, fmt.Sprintf("--descriptor_set_out=%s_pb.descriptor", filepath.Join(clientRelativePath, pdCtx.Name)))
 		args = append(args, "--include_source_info")
 	}
 
