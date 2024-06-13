@@ -80,5 +80,5 @@ func goModulePrefix(ctx *CtxData) string {
 	if modulePrefix != "" {
 		return modulePrefix + "/" + group
 	}
-	return modulePrefix
+	return ""
 }

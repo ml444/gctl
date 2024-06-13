@@ -2,8 +2,9 @@ package util
 
 import (
 	"bytes"
-	log "github.com/ml444/glog"
 	"os/exec"
+
+	log "github.com/ml444/glog"
 )
 
 func CmdExec(cmdStr string) {

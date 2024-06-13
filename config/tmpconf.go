@@ -243,6 +243,9 @@ func (tmplCfg *TemplateConfig) ClientRelativeDirs(group, serviceName string) []s
 
 func (tmplCfg *TemplateConfig) ServerTargetAbsPath(serviceGroup, serviceName string) string {
 	var elems []string
+	if GlobalConfig.TargetBaseDir == "" {
+		GlobalConfig.TargetBaseDir, _ = os.Getwd()
+	}
 	elems = append(elems, filepath.Join(GlobalConfig.TargetBaseDir, GlobalConfig.GoModulePrefix))
 	if GlobalConfig.GoModulePrefix != "" && serviceGroup != "" {
 		elems = append(elems, serviceGroup)

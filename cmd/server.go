@@ -37,7 +37,7 @@ var serverCmd = &cobra.Command{
 		serviceName := getProtoName(name)
 		tmplCfg := config.GlobalConfig.TemplatesConf
 		protoPath := tmplCfg.ProtoTargetAbsPath(projectGroup, name)
-		//baseDir := config.GlobalConfig.TargetBaseDir
+		// baseDir := config.GlobalConfig.TargetBaseDir
 		onceFiles := config.GlobalConfig.OnceFiles
 		onceFileMap := map[string]bool{}
 		for _, fileName := range onceFiles {
@@ -73,8 +73,8 @@ var serverCmd = &cobra.Command{
 				ctx.Ports = ports
 			}
 		}
-		//clientTempDir := tmplCfg.ClientTmplAbsDir()
-		//protoTempPath := tmplCfg.ProtoTmplAbsPath()
+		// clientTempDir := tmplCfg.ClientTmplAbsDir()
+		// protoTempPath := tmplCfg.ProtoTmplAbsPath()
 		serverTempDir := tmplCfg.ServerTmplAbsDir()
 		// serverRootDir := filepath.Join(baseDir, fmt.Sprintf("%sServer", strings.Split(pd.Options["go_package"], ";")[0]))
 		serverRootDir := tmplCfg.ServerTargetAbsPath(projectGroup, serviceName)
@@ -174,7 +174,7 @@ func genFile(path, targetFile, tempName string, ctx *parser.CtxData, tmplCfg *co
 			return err
 		}
 		ctx.ExistedGoFile = existedFileAST
-		log.Infof("ExistedFile: %+v \n", existedFileAST)
+		log.Debugf("ExistedFile: %+v \n", existedFileAST)
 	} else {
 		ctx.ExistedGoFile = nil
 	}
