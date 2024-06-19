@@ -56,6 +56,7 @@ var clientCmd = &cobra.Command{
 		pdCtx.Group = projectGroup
 		serviceName := getProtoName(name)
 		pdCtx.Name = serviceName
+		pdCtx.GoPackage = tmplCfg.JoinGoPackage(projectGroup, serviceName)
 		if config.GlobalConfig.EnableAssignErrcode {
 			var moduleID int
 			svcAssign, err := db.GetDispatcher(serviceName, projectGroup, &config.GlobalConfig)
@@ -193,7 +194,8 @@ func GeneratePbFiles(pdCtx *parser.CtxData, basePath string, needGenGrpcPb bool)
 		args = append(args, fmt.Sprintf("--go-gorm_out=%s", filepath.ToSlash(basePath)))
 		args = append(args, fmt.Sprintf("--go-errcode_out=%s", filepath.ToSlash(basePath)))
 		args = append(args, fmt.Sprintf("--go-validate_out=%s", filepath.ToSlash(basePath)))
-		args = append(args, fmt.Sprintf("--go-field_out=include_prefix=Model:%s", filepath.ToSlash(basePath)))
+		args = append(args, fmt.Sprintf("--go-field_out=%s", filepath.ToSlash(basePath)))
+		// args = append(args, fmt.Sprintf("--go-field_out=include_prefix=Model:%s", filepath.ToSlash(basePath)))
 		if config.GlobalConfig.SwaggerCentralRepoPath != "" {
 			swagDir := filepath.Join(config.GlobalConfig.SwaggerCentralRepoPath, pdCtx.Group)
 			if !util.IsDirExist(swagDir) {
