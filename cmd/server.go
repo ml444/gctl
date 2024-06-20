@@ -52,6 +52,7 @@ var serverCmd = &cobra.Command{
 		ctx.Group = projectGroup
 		ctx.Command = "server"
 		ctx.Cfg = &config.GlobalConfig
+		ctx.GoPackage = tmplCfg.JoinGoPackage(projectGroup, serviceName)
 		if config.GlobalConfig.EnableAssignPort {
 			var port int
 			svcAssign, err := db.GetDispatcher(serviceName, projectGroup, &config.GlobalConfig)
