@@ -236,6 +236,9 @@ func (tmplCfg *TemplateConfig) ClientRelativeDirs(group, serviceName string) []s
 	for _, el := range tmplCfg.Target.RelativeDir.Client {
 		el = strings.ReplaceAll(el, GroupNameVar, group)
 		el = strings.ReplaceAll(el, ServiceNameVar, serviceName)
+		if el == "" {
+			continue
+		}
 		elems = append(elems, el)
 	}
 	return elems
@@ -253,6 +256,9 @@ func (tmplCfg *TemplateConfig) ServerTargetAbsPath(serviceGroup, serviceName str
 	for _, el := range tmplCfg.Target.RelativeDir.Server {
 		el = strings.ReplaceAll(el, GroupNameVar, serviceGroup)
 		el = strings.ReplaceAll(el, ServiceNameVar, serviceName)
+		if el == "" {
+			continue
+		}
 		elems = append(elems, el)
 	}
 	return filepath.Join(elems...)
