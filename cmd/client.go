@@ -72,6 +72,27 @@ var clientCmd = &cobra.Command{
 			}
 			pdCtx.ModuleID = moduleID
 		}
+		if config.GlobalConfig.EnableAssignPort {
+			var port int
+			svcAssign, err := db.GetDispatcher(serviceName, projectGroup, &config.GlobalConfig)
+			if err != nil {
+				log.Error(err)
+				return
+			}
+			defer svcAssign.Close()
+			err = svcAssign.GetOrAssignPortAndErrcode(&port, nil)
+			if err != nil {
+				log.Error(err)
+				return
+			}
+			if port != 0 {
+				var ports []int
+				for i := 0; i < config.GlobalConfig.SvcPortInterval; i++ {
+					ports = append(ports, port+i)
+				}
+				pdCtx.Ports = ports
+			}
+		}
 		var clientRootDir string
 		if pkgPath := pdCtx.Options["go_package"]; pkgPath != "" {
 			if strings.Contains(pkgPath, ";") {
