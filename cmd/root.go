@@ -9,7 +9,6 @@ import (
 	"github.com/ml444/gctl/config"
 
 	log "github.com/ml444/glog"
-	logConf "github.com/ml444/glog/config"
 	"github.com/spf13/cobra"
 )
 
@@ -24,8 +23,8 @@ var (
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "If you want to se the debug logs, or print all environment variables.")
 
-	//serverCmd.Flags().StringVarP(&protoPath, "proto", "p", "", "The filepath of proto")
-	//serverCmd.Flags().StringVarP(&projectGroup, "service-group", "g", "", "a group of service, example: base|sys|biz...")
+	// serverCmd.Flags().StringVarP(&protoPath, "proto", "p", "", "The filepath of proto")
+	// serverCmd.Flags().StringVarP(&projectGroup, "service-group", "g", "", "a group of service, example: base|sys|biz...")
 }
 
 var rootCmd = &cobra.Command{
@@ -54,7 +53,7 @@ func Execute() {
 	}
 
 	if debug {
-		err = log.InitLog(logConf.SetLevel2Logger(level.DebugLevel))
+		err = log.InitLog(log.SetLoggerLevel(level.DebugLevel))
 		if err != nil {
 			println(err.Error())
 		}

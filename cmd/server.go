@@ -117,32 +117,6 @@ var serverCmd = &cobra.Command{
 			} else {
 				return genFile(path, targetFile, info.Name(), ctx, tmplCfg, onceFileMap)
 			}
-			// if util.IsFileExist(targetFile) {
-			// 	if _, ok := onceFileMap[tmplCfg.GetFileName(info.Name())]; ok {
-			// 		log.Printf("[%s] file is exist in this directory, skip it", targetFile)
-			// 		return nil
-			// 	}
-			// 	if !strings.HasSuffix(targetFile, ".go") {
-			// 		log.Debugf("skip it, not a go file: %s \n", targetFile)
-			// 		return nil
-			// 	}
-			// 	var existedFileAST *parser.GoFileAST
-			// 	existedFileAST, err = parser.ParseFile(targetFile)
-			// 	if err != nil {
-			// 		log.Info(err)
-			// 		return err
-			// 	}
-			// 	ctx.ExistedGoFile = existedFileAST
-			// 	log.Infof("ExistedFile: %+v \n", existedFileAST)
-			// } else {
-			// 	ctx.ExistedGoFile = nil
-			// }
-			//
-			// log.Infof("generating file: %s", targetFile)
-			// err = parser.GenerateTemplate(targetFile, path, ctx)
-			// if err != nil {
-			// 	return err
-			// }
 			return nil
 		})
 		if err != nil {
