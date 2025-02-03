@@ -57,6 +57,7 @@ func GetTmplFilesConf() (*TemplateConfig, error) {
 }
 
 func readYaml(fp string, conf interface{}) error {
+	log.Info(fp)
 	yamlFile, err := os.ReadFile(fp)
 	if err != nil {
 		log.Error(err)

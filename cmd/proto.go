@@ -43,12 +43,12 @@ var protoCmd = &cobra.Command{
 		pd := parser.CtxData{
 			PackageName: protoName,
 			GoPackage:   tmplCfg.JoinGoPackage(projectGroup, name),
-			//ModulePrefix: config.JoinModulePrefixWithGroup(projectGroup),
+			// ModulePrefix: config.JoinModulePrefixWithGroup(projectGroup),
 		}
 		pd.Group = projectGroup
 
-		var firstErrcode = 1
-		var endErrCode = 1 << 31
+		firstErrcode := 1
+		endErrCode := 1 << 30
 		if config.GlobalConfig.EnableAssignErrcode {
 			var errCode int
 			svcAssign, err := db.GetDispatcher(protoName, projectGroup, &config.GlobalConfig)
