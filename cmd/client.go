@@ -56,7 +56,7 @@ var clientCmd = &cobra.Command{
 		pdCtx.Group = projectGroup
 		serviceName := getProtoName(name)
 		pdCtx.Name = serviceName
-		pdCtx.GoPackage = tmplCfg.JoinGoPackage(projectGroup, serviceName)
+		// pdCtx.GoPackage = tmplCfg.JoinGoPackage(projectGroup, serviceName)
 		if config.GlobalConfig.EnableAssignErrcode {
 			var moduleID int
 			svcAssign, err := db.GetDispatcher(serviceName, projectGroup, &config.GlobalConfig)
@@ -97,6 +97,7 @@ var clientCmd = &cobra.Command{
 		if pkgPath := pdCtx.Options["go_package"]; pkgPath != "" {
 			if strings.Contains(pkgPath, ";") {
 				pkgPath = strings.Split(pkgPath, ";")[0]
+				pdCtx.GoPackage = pkgPath
 			}
 			clientRootDir = tmplCfg.ClientTargetAbsDir0(pkgPath)
 		} else {

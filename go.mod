@@ -10,7 +10,6 @@ require (
 	github.com/ml444/glog v0.4.5
 	github.com/ml444/gutil v0.0.0-20231221121703-d05adbb24fad
 	github.com/spf13/cobra v1.6.1
-	github.com/spf13/pflag v1.0.5
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -21,7 +20,7 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/petermattis/goid v0.0.0-20240716203034-badd1c0974d6 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
+	github.com/spf13/pflag v1.0.5 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gorm.io/gorm v1.25.5 // indirect
 )

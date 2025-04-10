@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/ml444/gkit/log"
@@ -210,14 +209,26 @@ func (tmplCfg *TemplateConfig) ProtoTargetAbsPath(serviceGroup, protoPath string
 }
 
 func (tmplCfg *TemplateConfig) ClientTargetAbsDir0(packagePath string) string {
-	if GlobalConfig.TargetBaseDir == "" {
-		GlobalConfig.TargetBaseDir, _ = os.Getwd()
+	tgtBasePath := GlobalConfig.TargetBaseDir
+	if tgtBasePath == "" {
+		tgtBasePath, _ = os.Getwd()
 	}
-	switch runtime.GOOS {
-	case "windows":
-		packagePath = strings.ReplaceAll(packagePath, "/", "\\")
+	tgtBasePath = strings.TrimRight(tgtBasePath, string(os.PathSeparator))
+	_, file := filepath.Split(tgtBasePath)
+	dirs := strings.Split(packagePath, "/")
+	if len(dirs) > 0 {
+		pkgBaseDir := dirs[0]
+		if pkgBaseDir == "" && len(dirs) > 1 {
+			pkgBaseDir = dirs[1]
+		}
+		if pkgBaseDir == file {
+			dirs = dirs[1:]
+		}
 	}
-	return filepath.Join(GlobalConfig.TargetBaseDir, packagePath)
+	result := []string{tgtBasePath}
+	result = append(result, dirs...)
+
+	return filepath.Join(result...)
 }
 
 func (tmplCfg *TemplateConfig) ClientTargetAbsDir(serviceGroup, serviceName string) string {
