@@ -212,6 +212,7 @@ func (tmplCfg *TemplateConfig) ClientTargetAbsDir0(packagePath string) string {
 	tgtBasePath := GlobalConfig.TargetBaseDir
 	if tgtBasePath == "" {
 		tgtBasePath, _ = os.Getwd()
+		GlobalConfig.TargetBaseDir = tgtBasePath
 	}
 	tgtBasePath = strings.TrimRight(tgtBasePath, string(os.PathSeparator))
 	_, file := filepath.Split(tgtBasePath)

@@ -97,8 +97,8 @@ var clientCmd = &cobra.Command{
 		if pkgPath := pdCtx.Options["go_package"]; pkgPath != "" {
 			if strings.Contains(pkgPath, ";") {
 				pkgPath = strings.Split(pkgPath, ";")[0]
-				pdCtx.GoPackage = pkgPath
 			}
+			pdCtx.GoPackage = pkgPath
 			clientRootDir = tmplCfg.ClientTargetAbsDir0(pkgPath)
 		} else {
 			clientRootDir = tmplCfg.ClientTargetAbsDir(projectGroup, serviceName)
@@ -138,10 +138,11 @@ var clientCmd = &cobra.Command{
 				return
 			}
 			baseDir := config.GlobalConfig.TargetBaseDir
-			if len(pdCtx.Options["go_package"]) == 0 {
-				baseDir = clientRootDir
-			}
-			log.Debug("root location of code generation: ", baseDir)
+
+			log.Info("baseDir: ", baseDir)
+			log.Info("GoPackage: ", pdCtx.GoPackage)
+			log.Info("TargetBaseDir: ", config.GlobalConfig.TargetBaseDir)
+			log.Info("root location of code generation: ", pdCtx.ClientDir)
 			log.Info("generating protobuf file")
 			err = GeneratePbFiles(pdCtx, baseDir, needGenGrpcPb)
 			if err != nil {
@@ -187,7 +188,7 @@ func checkProtoc() bool {
 	return true
 }
 
-func GeneratePbFiles(pdCtx *parser.CtxData, basePath string, needGenGrpcPb bool) error {
+func GeneratePbFiles(pdCtx *parser.CtxData, baseDir string, needGenGrpcPb bool) error {
 	var err error
 	var args []string
 	var protocName string
@@ -199,10 +200,19 @@ func GeneratePbFiles(pdCtx *parser.CtxData, basePath string, needGenGrpcPb bool)
 		protocName = "protoc"
 	}
 
-	clientRelativePath, err := filepath.Rel(basePath, pdCtx.ClientDir)
+	clientRelativePath, err := filepath.Rel(baseDir, pdCtx.ClientDir)
 	if err != nil {
 		log.Error(err)
 		return err
+	}
+	dir, projectName := filepath.Split(config.GlobalConfig.TargetBaseDir)
+	// baseDir := clientRootDir
+	if pdCtx.GoPackage == "" {
+		baseDir = pdCtx.ClientDir
+	} else {
+		if strings.HasPrefix(pdCtx.GoPackage, projectName) {
+			baseDir = dir
+		}
 	}
 	protoDir, protoName := filepath.Split(pdCtx.FilePath)
 	log.Info("protoDir:", protoDir)
@@ -210,14 +220,14 @@ func GeneratePbFiles(pdCtx *parser.CtxData, basePath string, needGenGrpcPb bool)
 	if len(config.GlobalConfig.ProtoPlugins) > 0 {
 		args = append(args, config.GlobalConfig.ProtoPlugins...)
 	} else {
-		args = append(args, fmt.Sprintf("--go_out=%s", filepath.ToSlash(basePath)))
-		args = append(args, fmt.Sprintf("--go-grpc_out=%s", filepath.ToSlash(basePath)))
-		args = append(args, fmt.Sprintf("--go-http_out=%s", filepath.ToSlash(basePath)))
-		args = append(args, fmt.Sprintf("--go-gorm_out=%s", filepath.ToSlash(basePath)))
-		args = append(args, fmt.Sprintf("--go-errcode_out=%s", filepath.ToSlash(basePath)))
-		args = append(args, fmt.Sprintf("--go-validate_out=%s", filepath.ToSlash(basePath)))
-		args = append(args, fmt.Sprintf("--go-field_out=%s", filepath.ToSlash(basePath)))
-		// args = append(args, fmt.Sprintf("--go-field_out=include_prefix=Model:%s", filepath.ToSlash(basePath)))
+		args = append(args, fmt.Sprintf("--go_out=%s", filepath.ToSlash(baseDir)))
+		args = append(args, fmt.Sprintf("--go-grpc_out=%s", filepath.ToSlash(baseDir)))
+		args = append(args, fmt.Sprintf("--go-http_out=%s", filepath.ToSlash(baseDir)))
+		args = append(args, fmt.Sprintf("--go-gorm_out=%s", filepath.ToSlash(baseDir)))
+		args = append(args, fmt.Sprintf("--go-errcode_out=%s", filepath.ToSlash(baseDir)))
+		args = append(args, fmt.Sprintf("--go-validate_out=%s", filepath.ToSlash(baseDir)))
+		args = append(args, fmt.Sprintf("--go-field_out=%s", filepath.ToSlash(baseDir)))
+		// args = append(args, fmt.Sprintf("--go-field_out=include_prefix=Model:%s", filepath.ToSlash(baseDir)))
 		if config.GlobalConfig.SwaggerCentralRepoPath != "" {
 			swagDir := filepath.Join(config.GlobalConfig.SwaggerCentralRepoPath, pdCtx.Group)
 			if !util.IsDirExist(swagDir) {
