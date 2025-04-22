@@ -17,7 +17,7 @@
 ```
 
 **OpenAPI Swagger options**:
-- openapi.yaml: `go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest` -> `--openapi_out=.`
+- openapi.yaml: `go install github.com/google/gnostic/cmd/protoc-gen-openapi@latest` -> `--openapi_out=.`
 - swagger.json(默认): `go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest` -> `--openapiv2_out=.`
 
 

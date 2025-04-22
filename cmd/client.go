@@ -218,7 +218,29 @@ func GeneratePbFiles(pdCtx *parser.CtxData, baseDir string, needGenGrpcPb bool) 
 	log.Info("protoDir:", protoDir)
 	log.Info("clientRelPath:", clientRelativePath)
 	if len(config.GlobalConfig.ProtoPlugins) > 0 {
-		args = append(args, config.GlobalConfig.ProtoPlugins...)
+		// args = append(args, config.GlobalConfig.ProtoPlugins...)
+		for _, plugin := range config.GlobalConfig.ProtoPlugins {
+			if strings.Contains(plugin, "=") {
+				args = append(args, plugin)
+			} else {
+				if strings.Contains(plugin, "openapi") {
+					var swagDir string
+					if config.GlobalConfig.SwaggerCentralRepoPath != "" {
+						swagDir = filepath.Join(config.GlobalConfig.SwaggerCentralRepoPath, pdCtx.Group)
+						if !util.IsDirExist(swagDir) {
+							os.MkdirAll(swagDir, 0o664)
+						}
+
+					} else {
+						swagDir = filepath.ToSlash(pdCtx.ClientDir)
+					}
+					args = append(args, fmt.Sprintf("%s=%s", plugin, swagDir))
+					continue
+				}
+
+				args = append(args, fmt.Sprintf("%s=%s", plugin, filepath.ToSlash(baseDir)))
+			}
+		}
 	} else {
 		args = append(args, fmt.Sprintf("--go_out=%s", filepath.ToSlash(baseDir)))
 		args = append(args, fmt.Sprintf("--go-grpc_out=%s", filepath.ToSlash(baseDir)))

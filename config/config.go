@@ -10,8 +10,6 @@ import (
 	"github.com/ml444/gkit/config"
 	"github.com/ml444/gkit/config/yaml"
 	"github.com/ml444/gkit/log"
-
-	"github.com/ml444/gctl/util"
 )
 
 const gctlConfigFileName = ".gctl_config.yaml"
@@ -124,11 +122,6 @@ func InitGlobalVar() error {
 
 	if GlobalConfig.ProtoCentralRepoPath != "" {
 		GlobalConfig.ProtoPaths = append(GlobalConfig.ProtoPaths, GlobalConfig.ProtoCentralRepoPath)
-	}
-	if GlobalConfig.SwaggerCentralRepoPath != "" {
-		if !util.IsDirExist(GlobalConfig.SwaggerCentralRepoPath) {
-			os.MkdirAll(GlobalConfig.SwaggerCentralRepoPath, 0o664)
-		}
 	}
 
 	return nil
