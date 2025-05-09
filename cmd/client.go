@@ -241,6 +241,8 @@ func GeneratePbFiles(pdCtx *parser.CtxData, baseDir string, needGenGrpcPb bool) 
 				args = append(args, fmt.Sprintf("%s=%s", plugin, filepath.ToSlash(baseDir)))
 			}
 		}
+		args = append(args, fmt.Sprintf("--descriptor_set_out=%s_pb.descriptor", filepath.Join(clientRelativePath, pdCtx.Name)))
+		args = append(args, "--include_source_info")
 	} else {
 		args = append(args, fmt.Sprintf("--go_out=%s", filepath.ToSlash(baseDir)))
 		args = append(args, fmt.Sprintf("--go-grpc_out=%s", filepath.ToSlash(baseDir)))

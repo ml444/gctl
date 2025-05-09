@@ -94,17 +94,15 @@ var serverCmd = &cobra.Command{
 			targetFile := tmplCfg.ProcessFilePath(serverRootDir, path, serverTempDir, info.Name())
 			if info.Name() == tmplCfg.Template.ServiceFileName && len(ctx.ServiceList) > 1 {
 				sourceSvcList := ctx.ServiceList
-				for i, svc := range sourceSvcList {
+				for _, svc := range sourceSvcList {
 					newTargetFile := targetFile
-					if i != 0 {
-						fileName := tmplCfg.GetFileName(info.Name())
-						newFileName := fmt.Sprintf(
-							"%s_%s.go",
-							strings.TrimSuffix(tmplCfg.GetFileName(info.Name()), ".go"),
-							svc.ServiceName,
-						)
-						newTargetFile = strings.ReplaceAll(targetFile, fileName, newFileName)
-					}
+					fileName := tmplCfg.GetFileName(info.Name())
+					newFileName := fmt.Sprintf(
+						"%s_%s.go",
+						strings.TrimSuffix(tmplCfg.GetFileName(info.Name()), ".go"),
+						svc.ServiceName,
+					)
+					newTargetFile = strings.ReplaceAll(targetFile, fileName, newFileName)
 					ctx.ServiceList = []*parser.Service{svc}
 					err = genFile(path, newTargetFile, info.Name(), ctx, tmplCfg, onceFileMap)
 					if err != nil {
